@@ -1,0 +1,2429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#667eea">
+<meta name="description" content="Seller Pro — Labels sort, SKU extract, Excel report">
+<link rel="manifest" id="pwaManifest">
+<title>Seller Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fira+Code:wght@400;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#f0f2f8;--white:#fff;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--sh:0 4px 24px rgba(0,0,0,.08);--shl:0 8px 40px rgba(0,0,0,.14);}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.view{display:none;}.view.active{display:block;}
+
+/* HOME */
+.hero{background:linear-gradient(135deg,#667eea,#764ba2 40%,#f093fb);padding:52px 20px 90px;text-align:center;position:relative;overflow:hidden;}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.2;pointer-events:none;}
+.b1{width:320px;height:320px;background:#ff6b6b;top:-110px;left:-90px;}
+.b2{width:260px;height:260px;background:#4ecdc4;bottom:-80px;right:-70px;}
+.b3{width:180px;height:180px;background:#ffe66d;top:40%;right:8%;}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:12px;font-weight:800;padding:5px 16px;border-radius:20px;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:18px;}
+.hero h1{font-size:clamp(26px,5vw,48px);font-weight:900;color:#fff;margin-bottom:10px;text-shadow:0 2px 20px rgba(0,0,0,.2);}
+.hero p{color:rgba(255,255,255,.85);font-size:15px;max-width:500px;margin:0 auto;}
+.tools-wrap{max-width:1100px;margin:-52px auto 0;padding:0 20px 60px;position:relative;z-index:2;}
+.sec-lbl{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px;}
+.tc{background:var(--white);border-radius:20px;padding:26px 20px 20px;cursor:pointer;box-shadow:var(--sh);transition:all .3s cubic-bezier(.34,1.56,.64,1);border:2px solid transparent;position:relative;animation:fadeUp .4s ease both;}
+.tc:nth-child(1){animation-delay:.05s;}.tc:nth-child(2){animation-delay:.1s;}.tc:nth-child(3){animation-delay:.15s;}.tc:nth-child(4){animation-delay:.2s;}.tc:nth-child(5){animation-delay:.25s;}
+.tc:hover{transform:translateY(-6px) scale(1.02);box-shadow:var(--shl);border-color:var(--c1);}
+.ti{width:58px;height:58px;border-radius:15px;background:linear-gradient(135deg,var(--c1),var(--c2));display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;box-shadow:0 8px 24px rgba(0,0,0,.14);transition:transform .3s;}
+.tc:hover .ti{transform:scale(1.1) rotate(-5deg);}
+.tc-title{font-size:15px;font-weight:800;margin-bottom:4px;}
+.tc-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+.tc-arr{position:absolute;bottom:16px;right:16px;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--c2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;opacity:0;transform:translateX(4px);transition:all .3s;}
+.tc:hover .tc-arr{opacity:1;transform:translateX(0);}
+
+/* TOOL PAGE */
+.tp{min-height:100vh;background:var(--bg);}
+.th{background:var(--white);border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(0,0,0,.05);padding:0 20px;}
+.th-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:14px;height:64px;}
+.bbtn{padding:7px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;}
+.bbtn:hover{background:var(--text);color:#fff;border-color:var(--text);}
+.ticon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--c1),var(--c2));display:flex;align-items:center;justify-content:center;font-size:18px;}
+.th h2{font-size:18px;font-weight:900;}
+.tbadge{margin-left:auto;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;}
+.tb{max-width:1100px;margin:0 auto;padding:28px 20px 60px;}
+
+/* UPLOAD */
+.uz{border:2.5px dashed var(--border);border-radius:20px;padding:52px 28px;text-align:center;cursor:pointer;background:var(--white);transition:all .3s;}
+.uz:hover,.uz.drag-over{border-color:var(--c1);box-shadow:0 0 0 4px rgba(102,126,234,.07);}
+.uz input{display:none;}
+.uz-icon{font-size:52px;display:block;margin-bottom:14px;}
+.uz h3{font-size:20px;font-weight:800;margin-bottom:6px;}
+.uz p{color:var(--muted);font-size:13px;}
+.btn-grad{display:inline-flex;align-items:center;gap:8px;padding:12px 26px;background:linear-gradient(135deg,var(--c1),var(--c2));border:none;border-radius:10px;color:#fff;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all .25s;box-shadow:0 4px 18px rgba(0,0,0,.14);margin-top:18px;}
+.btn-grad:hover{transform:translateY(-2px);}
+
+/* MODE CARDS */
+.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+.mc{border:2.5px solid var(--border);border-radius:16px;padding:18px;cursor:pointer;transition:all .25s;background:var(--white);position:relative;}
+.mc.active{border-color:var(--c1);background:rgba(102,126,234,.04);}
+.mc:hover:not(.active){border-color:#d1d5db;transform:translateY(-2px);}
+.mc-icon{font-size:26px;margin-bottom:8px;display:block;}
+.mc-title{font-size:14px;font-weight:800;margin-bottom:3px;}
+.mc-desc{font-size:12px;color:var(--muted);line-height:1.4;}
+.mc-chk{position:absolute;top:12px;right:12px;width:20px;height:20px;border:2px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.mc.active .mc-chk{background:linear-gradient(135deg,var(--c1),var(--c2));border-color:var(--c1);}
+.mc.active .mc-chk::after{content:'✓';font-size:11px;color:#fff;font-weight:900;}
+
+/* SUB TOGGLE */
+.stog{display:none;margin-top:14px;background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:16px;}
+.stog.show{display:block;}
+.stog-lbl{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.sopts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sopt{border:1.5px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;background:#fafafa;}
+.sopt.active{border-color:var(--c1);background:rgba(102,126,234,.05);}
+.sopt:hover:not(.active){border-color:#d1d5db;}
+.sopt-chk{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-radius:50%;vertical-align:middle;margin-right:5px;}
+.sopt.active .sopt-chk{background:var(--c1);border-color:var(--c1);}
+.sopt-icon{font-size:22px;margin-bottom:6px;display:block;}
+.sopt-title{font-size:13px;font-weight:800;margin-bottom:2px;}
+.sopt-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+
+/* PROCESS BTN */
+.btn-proc{width:100%;margin-top:18px;padding:16px;background:linear-gradient(135deg,var(--c1),var(--c2));border:none;border-radius:12px;color:#fff;font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:all .25s;box-shadow:0 6px 24px rgba(0,0,0,.14);display:none;}
+.btn-proc.show{display:block;}
+.btn-proc:hover{transform:translateY(-2px);}
+.btn-proc:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+/* PROGRESS */
+.pbox{display:none;margin-top:20px;background:var(--white);border-radius:16px;padding:24px;box-shadow:var(--sh);}
+.pbox.show{display:block;}
+.ph{display:flex;justify-content:space-between;margin-bottom:12px;}
+.plbl{font-size:13px;font-weight:800;}
+.ppct{font-family:'Fira Code',monospace;font-size:12px;color:var(--muted);}
+.po{background:var(--bg);border-radius:6px;height:8px;overflow:hidden;margin-bottom:10px;}
+.pi{height:100%;background:linear-gradient(90deg,var(--c1),var(--c2));border-radius:6px;width:0%;transition:width .2s;}
+.plog{font-family:'Fira Code',monospace;font-size:11px;color:var(--muted);max-height:80px;overflow-y:auto;line-height:1.9;}
+
+/* ERROR */
+.ebox{display:none;margin-top:14px;background:#fff5f5;border:1.5px solid #fed7d7;border-radius:12px;padding:14px 18px;color:#c53030;font-size:13px;font-weight:700;}
+.ebox.show{display:block;}
+
+/* RESULTS */
+.rsec{display:none;margin-top:28px;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.scard{background:var(--white);border-radius:16px;padding:18px;box-shadow:var(--sh);position:relative;overflow:hidden;}
+.scard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sc1),var(--sc2));}
+.slbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;}
+.sval{font-family:'Fira Code',monospace;font-size:28px;font-weight:600;line-height:1;color:var(--sc1);}
+.cbar-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+.cbar{background:var(--white);border-radius:16px;padding:16px 18px;box-shadow:var(--sh);}
+.cbar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.cbar-name{font-size:13px;font-weight:800;}
+.cbar-qty{font-family:'Fira Code',monospace;font-size:20px;font-weight:600;}
+.cbar-track{background:var(--bg);border-radius:4px;height:5px;overflow:hidden;}
+.cbar-fill{height:100%;border-radius:4px;}
+
+/* TABS */
+.tabs-nav{display:flex;gap:4px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:5px;margin-bottom:16px;overflow-x:auto;box-shadow:var(--sh);}
+.tab-btn{padding:8px 18px;background:transparent;border:none;border-radius:8px;color:var(--muted);font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tab-btn.active{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+.twrap{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:var(--sh);}
+.ttbar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1.5px solid var(--border);flex-wrap:wrap;}
+.ttitle{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);flex:1;}
+.sinp{background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Nunito',sans-serif;font-size:13px;padding:7px 12px;width:190px;outline:none;}
+.sinp:focus{border-color:var(--c1);}
+.sinp::placeholder{color:#9ca3af;}
+.rct{font-family:'Fira Code',monospace;font-size:11px;color:var(--muted);}
+.tscroll{overflow-x:auto;max-height:400px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:#f9fafb;padding:11px 15px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:800;position:sticky;top:0;z-index:2;border-bottom:1.5px solid var(--border);}
+tbody tr{border-top:1px solid #f3f4f6;}tbody tr:hover{background:#f9fafb;}
+tbody td{padding:10px 15px;font-size:13px;font-weight:600;}
+tbody td:first-child{font-family:'Fira Code',monospace;font-size:12px;color:#5b21b6;}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;}
+.pill.valmo{background:#fff7ed;color:#c2410c;border:1.5px solid #fed7aa;}
+.pill.delhivery{background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;}
+.pill.xpressbees{background:#faf5ff;color:#7c3aed;border:1.5px solid #ddd6fe;}
+.qb{background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0;padding:2px 8px;border-radius:6px;font-family:'Fira Code',monospace;font-size:11px;font-weight:700;}
+.grand-total td{font-weight:800;background:rgba(102,126,234,.04)!important;border-top:2px solid rgba(102,126,234,.2)!important;color:#4c1d95;}
+
+/* SORTED PREVIEW */
+.sprv{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:var(--sh);}
+.sgg{max-height:400px;overflow-y:auto;}
+.sgh{padding:10px 18px;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;}
+.sgh.valmo{background:linear-gradient(90deg,#fff7ed,#fef3c7);border-bottom:1.5px solid #fed7aa;color:#c2410c;}
+.sgh.delhivery{background:linear-gradient(90deg,#eff6ff,#dbeafe);border-bottom:1.5px solid #bfdbfe;color:#1d4ed8;}
+.sgh.xpressbees{background:linear-gradient(90deg,#faf5ff,#ede9fe);border-bottom:1.5px solid #ddd6fe;color:#7c3aed;}
+.sgr{display:flex;align-items:center;gap:12px;padding:9px 18px;font-size:13px;border-top:1px solid #f3f4f6;}
+.sgr:hover{background:#f9fafb;}
+.sgn{font-family:'Fira Code',monospace;font-size:11px;color:#9ca3af;width:36px;flex-shrink:0;}
+.sgsk{font-family:'Fira Code',monospace;font-size:12px;color:#5b21b6;flex:1;font-weight:600;}
+
+/* DOWNLOAD */
+.dl-sec{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;}
+.btn-dl{display:flex;align-items:center;gap:8px;padding:13px 24px;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.12);transition:all .2s;}
+.btn-dl:hover{transform:translateY(-2px);}
+.btn-dl.green{background:linear-gradient(135deg,#43e97b,#38f9d7);color:#064e3b;}
+.btn-dl.orange{background:linear-gradient(135deg,#f7971e,#ffd200);color:#78350f;}
+.btn-dl.blue{background:linear-gradient(135deg,#4facfe,#00f2fe);color:#1e3a5f;}
+.btn-dl.purple{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;}
+.btn-dl.pink{background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;}
+.btn-dl.teal{background:linear-gradient(135deg,#43e97b,#4facfe);color:#064e3b;}
+.breset{padding:13px 20px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.breset:hover{background:var(--text);color:#fff;border-color:var(--text);}
+.sep-grp{display:flex;flex-direction:column;gap:8px;}
+.sep-lbl{font-size:11px;font-weight:800;color:var(--muted);}
+.sep-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.skip-note{display:none;margin-top:10px;padding:10px 16px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;color:#92400e;font-size:13px;font-weight:600;}
+.skip-note.show{display:flex;gap:8px;}
+
+/* MERGE */
+.fl-wrap{display:flex;flex-direction:column;gap:8px;margin-top:16px;}
+.fi{display:flex;align-items:center;gap:12px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;box-shadow:var(--sh);cursor:grab;}
+.fi:hover{border-color:var(--c1);}
+.fi-ord{font-family:'Fira Code',monospace;font-size:12px;font-weight:700;color:var(--muted);width:22px;}
+.fi-nm{flex:1;font-size:13px;font-weight:700;}
+.fi-sz{font-size:12px;color:var(--muted);font-family:'Fira Code',monospace;}
+.fi-rm{width:28px;height:28px;background:#fee2e2;border:none;border-radius:8px;color:#ef4444;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.fi-rm:hover{background:#ef4444;color:#fff;}
+
+
+/* ════════════════════════════════
+   RTO TRACKER
+════════════════════════════════ */
+.rto-upload-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+@media(max-width:600px){.rto-upload-row{grid-template-columns:1fr;}}
+.rto-uz{border:2px dashed var(--border);border-radius:16px;padding:24px 16px;text-align:center;cursor:pointer;background:var(--white);transition:all .3s;}
+.rto-uz:hover,.rto-uz.has-file{border-color:#f7971e;}
+.rto-uz input{display:none;}
+.rto-uz-icon{font-size:36px;display:block;margin-bottom:8px;}
+.rto-uz h4{font-size:14px;font-weight:800;margin-bottom:4px;}
+.rto-uz p{font-size:11px;color:var(--muted);}
+.rto-fname{font-size:11px;font-weight:700;color:#15803d;margin-top:6px;font-family:'Fira Code',monospace;display:none;}
+.rto-uz.has-file .rto-fname{display:block;}
+.rto-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:580px){.rto-stats{grid-template-columns:repeat(2,1fr);}}
+.rto-stat{border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden;}
+.rto-stat .rs-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;opacity:.85;margin-bottom:8px;}
+.rto-stat .rs-val{font-family:'Fira Code',monospace;font-size:26px;font-weight:700;line-height:1;}
+.rto-stat .rs-sub{font-size:11px;opacity:.8;margin-top:4px;}
+.rs-green{background:linear-gradient(135deg,#43e97b,#38f9d7);color:#064e3b;}
+.rs-red{background:linear-gradient(135deg,#f5576c,#f093fb);}
+.rs-orange{background:linear-gradient(135deg,#f7971e,#ffd200);color:#78350f;}
+.rs-blue{background:linear-gradient(135deg,#4facfe,#00f2fe);color:#1e3a5f;}
+.rto-tabs{display:flex;gap:4px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:5px;margin-bottom:14px;overflow-x:auto;box-shadow:var(--sh);}
+.rto-tab{padding:8px 16px;background:transparent;border:none;border-radius:8px;color:var(--muted);font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.rto-tab.active{background:linear-gradient(135deg,#f7971e,#ffd200);color:#78350f;}
+.rto-panel{display:none;}.rto-panel.active{display:block;}
+.rto-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:800;}
+.rto-badge.accepted{background:#dcfce7;color:#15803d;}
+.rto-badge.rejected{background:#fee2e2;color:#dc2626;}
+.rto-badge.pending{background:#fef9c3;color:#92400e;}
+.rto-badge.action{background:#fce7f3;color:#9d174d;}
+.alert-box{background:#fff1f2;border:2px solid #fca5a5;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:none;}
+.alert-box.show{display:flex;gap:12px;align-items:flex-start;}
+.alert-box .ab-icon{font-size:24px;flex-shrink:0;}
+.alert-box h4{color:#dc2626;font-size:14px;font-weight:800;margin-bottom:4px;}
+.alert-box p{font-size:12px;color:#7f1d1d;font-weight:600;}
+.rejected-row td{background:#fff1f1 !important;}
+.accepted-row td{background:#f0fdf4 !important;}
+.pending-row td{background:#fffbeb !important;}
+
+/* ════════════════════════════════
+   CROP TOOL
+════════════════════════════════ */
+.crop-layout{display:flex;flex-direction:column;gap:20px;margin-top:20px;}
+.crop-canvas-wrap{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:var(--sh);}
+.crop-cav-hdr{padding:14px 18px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:10px;}
+.crop-cav-hdr span{font-size:13px;font-weight:800;flex:1;}
+.pnav{display:flex;align-items:center;gap:8px;}
+.pnav button{width:30px;height:30px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+.pnav button:hover{background:var(--c1);color:#fff;border-color:var(--c1);}
+.pi-info{font-family:'Fira Code',monospace;font-size:12px;font-weight:700;color:var(--muted);min-width:50px;text-align:center;}
+.crop-stage{position:relative;background:#1a1a2e;cursor:crosshair;overflow:hidden;min-height:200px;display:flex;align-items:flex-start;justify-content:center;touch-action:none;user-select:none;}
+#cropCanvas{display:block;max-width:100%;}
+.crop-selection{position:absolute;border:2px solid #667eea;background:rgba(102,126,234,.1);pointer-events:none;display:none;}
+.crop-handle{position:absolute;width:12px;height:12px;background:#fff;border:2px solid #667eea;border-radius:2px;pointer-events:none;}
+/* handles at corners and edges */
+.ch-tl{top:-6px;left:-6px;cursor:nw-resize;}
+.ch-tc{top:-6px;left:50%;transform:translateX(-50%);cursor:n-resize;}
+.ch-tr{top:-6px;right:-6px;cursor:ne-resize;}
+.ch-ml{top:50%;left:-6px;transform:translateY(-50%);cursor:w-resize;}
+.ch-mr{top:50%;right:-6px;transform:translateY(-50%);cursor:e-resize;}
+.ch-bl{bottom:-6px;left:-6px;cursor:sw-resize;}
+.ch-bc{bottom:-6px;left:50%;transform:translateX(-50%);cursor:s-resize;}
+.ch-br{bottom:-6px;right:-6px;cursor:se-resize;}
+.crop-dims{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;font-family:'Fira Code',monospace;font-size:11px;padding:3px 10px;border-radius:20px;display:none;}
+
+.crop-panel{background:var(--white);border-radius:16px;padding:20px;box-shadow:var(--sh);}
+.crop-panel h3{font-size:14px;font-weight:800;margin-bottom:16px;padding-bottom:12px;border-bottom:1.5px solid var(--border);}
+.cp-lbl{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.crop-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.cpbtn{padding:6px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif;}
+.cpbtn:hover{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;border-color:var(--c1);}
+.crop-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.cf{display:flex;flex-direction:column;gap:5px;}
+.cf label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;}
+.cf input{padding:8px 10px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:'Fira Code',monospace;font-size:13px;font-weight:600;color:var(--text);outline:none;width:100%;}
+.cf input:focus{border-color:var(--c1);}
+.crop-hint{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:10px;padding:10px 12px;font-size:12px;color:#0369a1;font-weight:600;margin-bottom:14px;line-height:1.5;}
+.apply-toggle{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0fdf4;border-radius:10px;margin-bottom:14px;border:1.5px solid #bbf7d0;}
+.apply-toggle label{font-size:12px;font-weight:700;color:#166534;flex:1;cursor:pointer;}
+.tog-sw{position:relative;width:40px;height:22px;background:#e5e7eb;border-radius:11px;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.tog-sw.on{background:linear-gradient(90deg,var(--c1),var(--c2));}
+.tog-sw::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.tog-sw.on::after{transform:translateX(18px);}
+
+/* ════════════════════════════════
+   SPLIT TOOL
+════════════════════════════════ */
+.split-mode-tabs{display:flex;gap:0;background:var(--white);border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-top:18px;box-shadow:var(--sh);}
+.sm-tab{flex:1;padding:16px 10px;background:transparent;border:none;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px;border-right:1.5px solid var(--border);}
+.sm-tab:last-child{border-right:none;}
+.sm-tab.active{background:linear-gradient(135deg,rgba(102,126,234,.08),rgba(118,75,162,.08));}
+.sm-tab-icon{font-size:28px;}
+.sm-tab-title{font-size:13px;font-weight:800;color:var(--text);}
+.sm-tab-desc{font-size:11px;color:var(--muted);}
+.sm-tab.active .sm-tab-title{color:var(--c1);}
+.sm-indicator{width:8px;height:8px;border-radius:50%;background:#e5e7eb;transition:all .2s;}
+.sm-tab.active .sm-indicator{background:var(--c1);}
+
+.split-config{background:var(--white);border-radius:16px;padding:20px;box-shadow:var(--sh);margin-top:18px;}
+.split-config h3{font-size:14px;font-weight:800;margin-bottom:16px;}
+.range-mode-row{display:flex;gap:10px;margin-bottom:18px;}
+.rm-btn{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;background:#fafafa;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--muted);transition:all .2s;text-align:center;}
+.rm-btn.active{border-color:var(--c1);background:rgba(102,126,234,.06);color:var(--c1);}
+.ranges-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.range-item{display:flex;align-items:center;gap:10px;background:#f9fafb;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;}
+.ri-lbl{font-size:12px;font-weight:800;color:var(--muted);width:60px;}
+.ri-input{width:70px;padding:7px 10px;background:var(--white);border:1.5px solid var(--border);border-radius:8px;font-family:'Fira Code',monospace;font-size:13px;font-weight:700;text-align:center;outline:none;color:var(--text);}
+.ri-input:focus{border-color:var(--c1);}
+.ri-sep{color:var(--muted);font-weight:700;font-size:13px;}
+.ri-rm{width:28px;height:28px;background:#fee2e2;border:none;border-radius:8px;color:#ef4444;font-size:14px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:auto;}
+.ri-rm:hover{background:#ef4444;color:#fff;}
+.add-range-btn{display:flex;align-items:center;gap:6px;padding:9px 16px;background:transparent;border:1.5px dashed var(--border);border-radius:10px;color:var(--c1);font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;width:100%;justify-content:center;}
+.add-range-btn:hover{border-color:var(--c1);background:rgba(102,126,234,.04);}
+.merge-check-row{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 14px;background:#f9fafb;border-radius:10px;border:1.5px solid var(--border);}
+.merge-check-row label{font-size:13px;font-weight:700;color:var(--text);cursor:pointer;}
+.fixed-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.fixed-row label{font-size:13px;font-weight:700;color:var(--text);}
+.fixed-row input{width:80px;padding:8px 10px;background:var(--white);border:1.5px solid var(--border);border-radius:8px;font-family:'Fira Code',monospace;font-size:14px;font-weight:700;text-align:center;outline:none;}
+.fixed-row input:focus{border-color:var(--c1);}
+.page-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.pt{width:52px;height:70px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:5px;background:#f9fafb;position:relative;overflow:hidden;}
+.pt.selected{border-color:var(--c1);background:rgba(102,126,234,.08);}
+.pt:hover{border-color:var(--c1);}
+.pt-num{font-family:'Fira Code',monospace;font-size:10px;font-weight:700;color:var(--muted);}
+.pt.selected .pt-num{color:var(--c1);}
+.pt-check{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;background:var(--c1);display:none;align-items:center;justify-content:center;}
+.pt.selected .pt-check{display:flex;}
+.pt-check::after{content:'✓';font-size:9px;color:#fff;font-weight:900;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@media(max-width:768px){.stats-row,.cbar-row{grid-template-columns:1fr 1fr;}.mode-row,.sopts{grid-template-columns:1fr;}.crop-layout{grid-template-columns:1fr;}.split-mode-tabs{flex-direction:column;}.sm-tab{border-right:none;border-bottom:1.5px solid var(--border);}.sm-tab:last-child{border-bottom:none;}}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="homeView" class="view active">
+  <div class="hero">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+    <div class="hero-badge">🛒 Seller Pro</div>
+    <h1>Seller Pro</h1>
+    <p>Labels sort karo, Excel banao, PDFs merge, crop aur split karo — seconds mein</p>
+  </div>
+  <div class="tools-wrap">
+    <div class="sec-lbl">⚡ Available Tools</div>
+    <div class="tools-grid">
+      <div class="tc" style="--c1:#667eea;--c2:#764ba2" onclick="goTo('labelView')">
+        <div class="ti">📦</div><div class="tc-title">Label Processor</div>
+        <div class="tc-desc">Courier wise sort, SKU wise Excel + Sorted PDF — instant</div>
+        <div class="tc-arr">→</div>
+      </div>
+      <div class="tc" style="--c1:#f7971e;--c2:#ffd200" onclick="goTo('rtoView')">
+        <div class="ti">🔄</div><div class="tc-title">RTO Tracker</div>
+        <div class="tc-desc">Return parcel reconcile karo — AWB scan, Packet ID match, loss calculate</div>
+        <div class="tc-arr">→</div>
+      </div>
+      <div class="tc" style="--c1:#f093fb;--c2:#f5576c" onclick="goTo('mergeView')">
+        <div class="ti">🔗</div><div class="tc-title">Merge PDF</div>
+        <div class="tc-desc">Multiple PDFs ek file mein — drag & drop order</div>
+        <div class="tc-arr">→</div>
+      </div>
+      <div class="tc" style="--c1:#4facfe;--c2:#00f2fe" onclick="goTo('cropView')">
+        <div class="ti">✂️</div><div class="tc-title">Crop PDF</div>
+        <div class="tc-desc">Drag karke area select karo</div>
+        <div class="tc-arr">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LABEL PROCESSOR -->
+<div id="labelView" class="view tp" style="--c1:#667eea;--c2:#764ba2">
+  <div class="th"><div class="th-inner">
+    <button class="bbtn" onclick="goHome()">← Back</button>
+    <div class="ticon">📦</div><h2>Order Label Processor</h2>
+    <span class="tbadge">⚡ All Platforms</span>
+  </div></div>
+  <div class="tb">
+    <div class="uz" id="lZ" onclick="document.getElementById('lF').click()">
+      <input type="file" id="lF" accept=".pdf">
+      <span class="uz-icon">📋</span><h3 id="lUT">Label PDF Upload Karo</h3>
+      <p id="lUS">Meesho / Flipkart / Amazon / Shopsy — auto detect hoga</p>
+      <button class="btn-grad" onclick="event.stopPropagation();document.getElementById('lF').click()">📂 PDF Select Karo</button>
+    </div>
+    <div class="mode-row" id="lMR" style="display:none">
+      <div class="mc active" id="lME" onclick="lSM('excel')"><span class="mc-chk"></span><span class="mc-icon">📊</span><div class="mc-title">Excel Report</div><div class="mc-desc">4 sheets: Final Orders, SKU Wise, Courier Wise, Summary + Grand Total</div></div>
+      <div class="mc" id="lMP" onclick="lSM('pdf')"><span class="mc-chk"></span><span class="mc-icon">🔀</span><div class="mc-title">Sorted PDF Labels</div><div class="mc-desc">Pages reorder: Valmo → Delhivery → Xpress Bees, phir SKU sort</div></div>
+    </div>
+    <div class="stog" id="lST">
+      <div class="stog-lbl">PDF Download Type</div>
+      <div class="sopts">
+        <div class="sopt active" id="lTA" onclick="lSPT('all')"><span class="sopt-chk"></span><span class="sopt-icon">📄</span><div class="sopt-title">All Courier — 1 PDF</div><div class="sopt-desc">Ek sorted PDF sabke liye</div></div>
+        <div class="sopt" id="lTS" onclick="lSPT('sep')"><span class="sopt-chk"></span><span class="sopt-icon">📂</span><div class="sopt-title">Courier Wise — Alag PDFs</div><div class="sopt-desc">Valmo, Delhivery, Xpress alag-alag</div></div>
+      </div>
+    </div>
+    <button class="btn-proc" id="lBtn" onclick="lProcess()">⚡ Process Karo</button>
+    <div class="ebox" id="lErr"></div>
+    <div class="pbox" id="lProg"><div class="ph"><span class="plbl" id="lPL">Processing...</span><span class="ppct" id="lPP">0/0</span></div><div class="po"><div class="pi" id="lPB"></div></div><div class="plog" id="lPLog"></div></div>
+    <div class="rsec" id="lRes">
+      <div class="stats-row">
+        <div class="scard" style="--sc1:#667eea;--sc2:#764ba2"><div class="slbl">Total Orders</div><div class="sval" id="lsO">0</div></div>
+        <div class="scard" style="--sc1:#43e97b;--sc2:#38f9d7"><div class="slbl">Total Qty</div><div class="sval" id="lsQ">0</div></div>
+        <div class="scard" style="--sc1:#f7971e;--sc2:#ffd200"><div class="slbl">Unique SKUs</div><div class="sval" id="lsS">0</div></div>
+        <div class="scard" style="--sc1:#4facfe;--sc2:#00f2fe"><div class="slbl">Couriers</div><div class="sval" id="lsC">0</div></div>
+      </div>
+      <div id="lPlatformBadge" style="display:none;margin-bottom:16px"></div>
+      <div class="cbar-row">
+        <div class="cbar" id="cbarV"><div class="cbar-top"><span class="cbar-name" id="cbarVN">🟠 Valmo</span><span class="cbar-qty" id="lcV" style="color:#c2410c">0</span></div><div class="cbar-track"><div class="cbar-fill" id="lcVB" style="background:linear-gradient(90deg,#f7971e,#ffd200);width:0%"></div></div></div>
+        <div class="cbar" id="cbarD"><div class="cbar-top"><span class="cbar-name" id="cbarDN">🔵 Delhivery</span><span class="cbar-qty" id="lcD" style="color:#1d4ed8">0</span></div><div class="cbar-track"><div class="cbar-fill" id="lcDB" style="background:linear-gradient(90deg,#4facfe,#00f2fe);width:0%"></div></div></div>
+        <div class="cbar" id="cbarX"><div class="cbar-top"><span class="cbar-name" id="cbarXN">🟣 Xpress Bees</span><span class="cbar-qty" id="lcX" style="color:#7c3aed">0</span></div><div class="cbar-track"><div class="cbar-fill" id="lcXB" style="background:linear-gradient(90deg,#a78bfa,#7c3aed);width:0%"></div></div></div>
+      </div>
+      <div id="lEV">
+        <div class="tabs-nav"><button class="tab-btn active" onclick="lTab('lt1',this)">📋 Final Orders</button><button class="tab-btn" onclick="lTab('lt2',this)">🏷️ SKU Wise</button><button class="tab-btn" onclick="lTab('lt3',this)">🚚 Courier Wise</button><button class="tab-btn" onclick="lTab('lt4',this)">📊 Summary</button><button class="tab-btn" id="ltDupBtn" onclick="lTab('lt5',this)" style="display:none">⚠️ Duplicates <span id="ltDupCount" style="background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">0</span></button></div>
+        <div class="tab-panel active" id="lt1"><div class="twrap"><div class="ttbar"><span class="ttitle">FINAL_ORDERS</span><input class="sinp" placeholder="🔍 Search..." oninput="lFt('ltb1',this.value,'lc1')"><span class="rct" id="lc1"></span></div><div class="tscroll"><table id="ltb1"><thead><tr><th>SKU</th><th>QTY</th><th>COURIER</th></tr></thead><tbody></tbody></table></div></div></div>
+        <div class="tab-panel" id="lt2"><div class="twrap"><div class="ttbar"><span class="ttitle">SKU_WISE</span><input class="sinp" placeholder="🔍 SKU..." oninput="lFt('ltb2',this.value,'lc2')"><span class="rct" id="lc2"></span></div><div class="tscroll"><table id="ltb2"><thead><tr><th>SKU</th><th>TOTAL QTY</th></tr></thead><tbody></tbody></table></div></div></div>
+        <div class="tab-panel" id="lt3"><div class="twrap"><div class="ttbar"><span class="ttitle">COURIER_WISE</span><input class="sinp" placeholder="🔍 Search..." oninput="lFt('ltb3',this.value,'lc3')"><span class="rct" id="lc3"></span></div><div class="tscroll"><table id="ltb3"><thead><tr><th>COURIER</th><th>SKU</th><th>TOTAL QTY</th></tr></thead><tbody></tbody></table></div></div></div>
+        <div class="tab-panel" id="lt4"><div class="twrap"><div class="ttbar"><span class="ttitle">COURIER_SUMMARY</span><span class="rct" id="lc4"></span></div><div class="tscroll"><table id="ltb4"><thead><tr><th>COURIER</th><th>TOTAL QTY</th></tr></thead><tbody></tbody></table></div></div></div>
+        <div class="tab-panel" id="lt5"><div class="twrap"><div class="ttbar"><span class="ttitle">⚠️ DUPLICATE ORDERS</span><span class="rct" id="lc5"></span></div><div style="padding:12px 16px;background:#fff7ed;border-bottom:1px solid #fed7aa;font-size:12px;color:#92400e;font-weight:700">⚠️ Same Name + Pincode + Full Address wale orders — customer ne double order kar diya hoga. Cancel karne se pehle verify karein.</div><div class="tscroll"><table id="ltb5"><thead><tr><th>GROUP</th><th>NAME</th><th>PINCODE</th><th>ADDRESS</th><th>SKU</th><th>COURIER</th></tr></thead><tbody></tbody></table></div></div></div>
+      </div>
+      <div id="lPV" style="display:none"><div class="sprv"><div class="ttbar"><span class="ttitle">SORTED LABELS</span><span class="rct" id="lcS"></span></div><div class="sgg" id="lSG"></div></div></div>
+      <div class="skip-note" id="lSk"></div>
+      <div class="dl-sec">
+        <button class="btn-dl green" id="lXL" onclick="lDlXL()">📥 Excel Download</button>
+        <a class="btn-dl orange" id="lAll" style="display:none" download="SORTED_LABELS_ALL.pdf">🔀 All Courier PDF ⬇️</a>
+        <div class="sep-grp" id="lSep" style="display:none"><span class="sep-lbl">📂 Courier Wise:</span><div class="sep-btns"><a class="btn-dl orange" id="ldV" download="Valmo_Labels.pdf" style="display:none">🟠 Valmo ⬇️</a><a class="btn-dl blue" id="ldD" download="Delhivery_Labels.pdf" style="display:none">🔵 Delhivery ⬇️</a><a class="btn-dl purple" id="ldX" download="XpressBees_Labels.pdf" style="display:none">🟣 Xpress Bees ⬇️</a></div></div>
+        <button class="breset" onclick="lReset()">🔄 New PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MERGE PDF -->
+<div id="mergeView" class="view tp" style="--c1:#f093fb;--c2:#f5576c">
+  <div class="th"><div class="th-inner"><button class="bbtn" onclick="goHome()">← Back</button><div class="ticon">🔗</div><h2>Merge PDF</h2><span class="tbadge">Multiple → One</span></div></div>
+  <div class="tb">
+    <div class="uz" id="mZ" onclick="document.getElementById('mF').click()">
+      <input type="file" id="mF" accept=".pdf" multiple>
+      <span class="uz-icon">📂</span><h3>PDFs Upload Karo</h3><p>Multiple PDF files select karo — drag & drop order change karo</p>
+      <button class="btn-grad" onclick="event.stopPropagation();document.getElementById('mF').click()">📂 PDFs Select Karo</button>
+    </div>
+    <div id="mFL" class="fl-wrap"></div>
+    <button class="btn-proc" id="mBtn" onclick="mProcess()">🔗 Merge Karo</button>
+    <div class="ebox" id="mErr"></div>
+    <div class="pbox" id="mProg"><div class="ph"><span class="plbl" id="mPL">Merging...</span><span class="ppct" id="mPP"></span></div><div class="po"><div class="pi" id="mPB" style="background:linear-gradient(90deg,#f093fb,#f5576c)"></div></div><div class="plog" id="mPLog"></div></div>
+    <div class="rsec" id="mRes">
+      <div class="stats-row"><div class="scard" style="--sc1:#f093fb;--sc2:#f5576c"><div class="slbl">Files</div><div class="sval" id="msF">0</div></div><div class="scard" style="--sc1:#667eea;--sc2:#764ba2"><div class="slbl">Pages</div><div class="sval" id="msP">0</div></div><div class="scard" style="--sc1:#43e97b;--sc2:#38f9d7"><div class="slbl">Size</div><div class="sval" id="msS">0KB</div></div></div>
+      <div class="dl-sec"><a class="btn-dl pink" id="mDl" download="MERGED.pdf" style="display:none">📥 Merged PDF ⬇️</a><button class="breset" onclick="mReset()">🔄 Reset</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- CROP PDF -->
+<div id="cropView" class="view tp" style="--c1:#4facfe;--c2:#00f2fe">
+  <div class="th"><div class="th-inner"><button class="bbtn" onclick="goHome()">← Back</button><div class="ticon">✂️</div><h2>Crop PDF</h2><span class="tbadge">Drag to Crop</span></div></div>
+  <div class="tb">
+    <!-- Upload zone -->
+    <div class="uz" id="cZ">
+      <input type="file" id="cF" accept=".pdf" style="display:none">
+      <span class="uz-icon">📄</span>
+      <h3 id="cUT">PDF Upload Karo</h3>
+      <p>Crop karne ke liye PDF select karo</p>
+      <button class="btn-grad" onclick="document.getElementById('cF').click()">📂 Select Karo</button>
+    </div>
+
+    <!-- Crop workspace (hidden until file loaded) -->
+    <div id="cWorkspace" style="display:none;margin-top:16px">
+      <!-- Page nav bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--white);border-radius:12px;padding:10px 16px;margin-bottom:10px;box-shadow:var(--sh)">
+        <span style="font-size:13px;font-weight:800">📄 <span id="cFname">file.pdf</span></span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="cPrev()" style="width:32px;height:32px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:16px;font-weight:700">‹</button>
+          <span id="cPI" style="font-family:'Fira Code',monospace;font-size:12px;font-weight:700;color:var(--muted);min-width:50px;text-align:center">1/1</span>
+          <button onclick="cNext()" style="width:32px;height:32px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:16px;font-weight:700">›</button>
+        </div>
+      </div>
+
+      <!-- Canvas stage -->
+      <div id="cStage" style="position:relative;background:#e5e7eb;border-radius:12px;overflow:hidden;touch-action:none;user-select:none;cursor:crosshair;line-height:0;">
+        <canvas id="cCanvas" style="display:block;width:100%;height:auto;"></canvas>
+        <!-- Blue selection box -->
+        <div id="cSel" style="display:none;position:absolute;border:2px solid #2563eb;background:rgba(37,99,235,.1);box-sizing:border-box;pointer-events:none;">
+          <div style="position:absolute;width:12px;height:12px;background:#2563eb;border-radius:2px;top:-6px;left:-6px;"></div>
+          <div style="position:absolute;width:12px;height:12px;background:#2563eb;border-radius:2px;top:-6px;right:-6px;"></div>
+          <div style="position:absolute;width:12px;height:12px;background:#2563eb;border-radius:2px;bottom:-6px;left:-6px;"></div>
+          <div style="position:absolute;width:12px;height:12px;background:#2563eb;border-radius:2px;bottom:-6px;right:-6px;"></div>
+        </div>
+        <div id="cDims" style="display:none;position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;font-size:11px;font-family:'Fira Code',monospace;padding:4px 10px;border-radius:6px;pointer-events:none;white-space:nowrap;"></div>
+      </div>
+
+      <!-- Controls -->
+      <div style="background:var(--white);border-radius:12px;padding:16px;margin-top:10px;box-shadow:var(--sh)">
+        <!-- Presets -->
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px">Quick Presets</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="cpbtn" onclick="cPreset('top')">Top Half</button>
+          <button class="cpbtn" onclick="cPreset('bottom')">Bottom Half</button>
+          <button class="cpbtn" onclick="cPreset('left')">Left Half</button>
+          <button class="cpbtn" onclick="cPreset('right')">Right Half</button>
+          <button class="cpbtn" onclick="cPreset('border')">Remove Border</button>
+          <button class="cpbtn" onclick="cPreset('reset')">🔄 Reset</button>
+        </div>
+        <!-- Margin inputs -->
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px">Crop Margins (points)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+          <div><label style="display:block;font-size:10px;font-weight:800;color:var(--muted);margin-bottom:4px">TOP</label><input type="number" id="cTop" value="0" min="0" oninput="cUpdateFromFields()" style="width:100%;padding:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:'Fira Code',monospace;font-size:13px;font-weight:700;text-align:center;outline:none"></div>
+          <div><label style="display:block;font-size:10px;font-weight:800;color:var(--muted);margin-bottom:4px">BOTTOM</label><input type="number" id="cBot" value="0" min="0" oninput="cUpdateFromFields()" style="width:100%;padding:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:'Fira Code',monospace;font-size:13px;font-weight:700;text-align:center;outline:none"></div>
+          <div><label style="display:block;font-size:10px;font-weight:800;color:var(--muted);margin-bottom:4px">LEFT</label><input type="number" id="cLft" value="0" min="0" oninput="cUpdateFromFields()" style="width:100%;padding:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:'Fira Code',monospace;font-size:13px;font-weight:700;text-align:center;outline:none"></div>
+          <div><label style="display:block;font-size:10px;font-weight:800;color:var(--muted);margin-bottom:4px">RIGHT</label><input type="number" id="cRgt" value="0" min="0" oninput="cUpdateFromFields()" style="width:100%;padding:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:'Fira Code',monospace;font-size:13px;font-weight:700;text-align:center;outline:none"></div>
+        </div>
+        <!-- Apply toggle + Crop button -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="document.getElementById('cApplyTog').classList.toggle('on')">
+            <div class="tog-sw on" id="cApplyTog"></div>
+            <span style="font-size:13px;font-weight:700">Sab pages pe apply karo</span>
+          </div>
+          <button class="btn-proc show" style="margin:0;padding:12px 28px" onclick="cProcess()">✂️ Crop Karo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ebox" id="cErr"></div>
+    <div class="pbox" id="cProg"><div class="ph"><span class="plbl" id="cPL">Cropping...</span></div><div class="po"><div class="pi" id="cPB" style="background:linear-gradient(90deg,#4facfe,#00f2fe)"></div></div><div class="plog" id="cPLog"></div></div>
+    <div class="rsec" id="cRes">
+      <div class="stats-row">
+        <div class="scard" style="--sc1:#4facfe;--sc2:#00f2fe"><div class="slbl">Pages</div><div class="sval" id="csP">0</div></div>
+        <div class="scard" style="--sc1:#43e97b;--sc2:#38f9d7"><div class="slbl">Size</div><div class="sval" id="csS">0KB</div></div>
+      </div>
+      <div class="dl-sec">
+        <a class="btn-dl blue" id="cDl" download="CROPPED.pdf" style="display:none">📥 Cropped PDF ⬇️</a>
+        <button class="breset" onclick="cReset()">🔄 Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- SPLIT PDF -->
+<div id="skuView" class="view tp" style="--c1:#f7971e;--c2:#ffd200">
+  <div class="th"><div class="th-inner"><button class="bbtn" onclick="goHome()">← Back</button><div class="ticon">🏷️</div><h2>SKU Extractor</h2><span class="tbadge">Any PDF</span></div></div>
+  <div class="tb">
+    <div class="uz" id="skZ" onclick="document.getElementById('skF').click()">
+      <input type="file" id="skF" accept=".pdf">
+      <span class="uz-icon">🏷️</span><h3 id="skUT">PDF Upload Karo</h3>
+      <p>Kisi bhi seller ke PDF se SKU data extract karo</p>
+      <button class="btn-grad" onclick="event.stopPropagation();document.getElementById('skF').click()">📂 PDF Select Karo</button>
+    </div>
+    <div id="skConf" style="display:none;margin-top:18px">
+      <div class="split-config" style="display:block">
+        <h3>🔍 SKU Pattern Configure Karo</h3>
+        <div class="crop-fields">
+          <div class="cf" style="grid-column:1/-1"><label>Header Row Keyword (jo SKU se pehle aata hai)</label><input type="text" id="skHeader" value="SKU" style="width:100%"></div>
+          <div class="cf" style="grid-column:1/-1"><label>SKU Prefix Remove (optional, jaise P + 2 digits)</label><input type="text" id="skPrefix" value="^P\\d{2}" style="width:100%"></div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);font-weight:600;margin-top:8px">Meesho ke liye defaults already set hain. Dusre platforms ke liye customize karo.</p>
+        <div style="margin-top:10px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:12px 14px;font-size:12px;color:#065f46;font-weight:700;line-height:1.7">
+          ✅ <b>3 formats auto-detect hote hain:</b><br>
+          🛒 <b>Flipkart/Shopsy</b> — "SKU ID | Description" table se extract<br>
+          📦 <b>Amazon Invoice</b> — Parentheses se: <code style="background:#d1fae5;padding:2px 5px;border-radius:4px;font-weight:800">ASIN ( SKU-CODE )</code><br>
+          🔎 <b>Auto-scan fallback</b> — Koi bhi uppercase hyphenated code
+        </div>
+      </div>
+    </div>
+    <button class="btn-proc" id="skBtn" onclick="skProcess()">🔍 SKU Extract Karo</button>
+    <div class="ebox" id="skErr"></div>
+    <div class="pbox" id="skProg"><div class="ph"><span class="plbl" id="skPL">Extracting...</span><span class="ppct" id="skPP">0/0</span></div><div class="po"><div class="pi" id="skPB" style="background:linear-gradient(90deg,#f7971e,#ffd200)"></div></div><div class="plog" id="skPLog"></div></div>
+    <div class="rsec" id="skRes">
+      <div class="stats-row">
+        <div class="scard" style="--sc1:#f7971e;--sc2:#ffd200"><div class="slbl">Total Pages</div><div class="sval" id="sksPg">0</div></div>
+        <div class="scard" style="--sc1:#667eea;--sc2:#764ba2"><div class="slbl">SKUs Found</div><div class="sval" id="sksS">0</div></div>
+        <div class="scard" style="--sc1:#43e97b;--sc2:#38f9d7"><div class="slbl">Total Qty</div><div class="sval" id="sksQ">0</div></div>
+        <div class="scard" style="--sc1:#4facfe;--sc2:#00f2fe"><div class="slbl">Unique SKUs</div><div class="sval" id="sksU">0</div></div>
+      </div>
+      <div class="twrap"><div class="ttbar"><span class="ttitle">EXTRACTED SKU DATA</span><input class="sinp" placeholder="🔍 SKU search..." oninput="lFt('sktb',this.value,'skct')"><span class="rct" id="skct"></span></div><div class="tscroll"><table id="sktb"><thead><tr><th>PAGE</th><th>SKU</th><th>QTY</th><th>SOURCE</th></tr></thead><tbody></tbody></table></div></div>
+      <div class="dl-sec" style="margin-top:16px">
+        <button class="btn-dl teal" onclick="skDlXL()">📥 Excel Download</button>
+        <button class="breset" onclick="skReset()">🔄 New PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RTO TRACKER -->
+<div id="rtoView" class="view tp" style="--c1:#f7971e;--c2:#ffd200">
+  <div class="th"><div class="th-inner">
+    <button class="bbtn" onclick="goHome()">← Back</button>
+    <div class="ticon">🔄</div><h2>RTO Tracker</h2>
+    <span class="tbadge" id="rtoMemBadge" title="Orders in 60-day memory">🧠 0 saved</span>
+  </div></div>
+  <div class="tb">
+    <!-- Memory info bar -->
+    <div id="rtoMemBar" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:22px">🧠</span>
+          <div><div style="font-size:13px;font-weight:800;color:#f0f0ff">Smart Memory</div><div style="font-size:11px;color:#9ca3af"><span id="rtoMemCount">0</span> AWB→OrderID mappings saved (60 days)</div></div>
+        </div>
+        <button onclick="rtoShowMemory()" style="padding:6px 14px;background:rgba(247,151,30,.2);border:1px solid #f7971e;border-radius:8px;color:#ffd200;font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer">👁 View</button>
+      </div>
+      <!-- PC→Mobile Transfer -->
+      <div style="background:#0f172a;border:1px dashed #334155;border-radius:10px;padding:12px 14px">
+        <div style="font-size:11px;font-weight:800;color:#f7971e;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">💻 PC → 📱 Mobile Transfer</div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">PC pe labels process karo → Memory Export karo → Mobile pe Import karo → Scan karo</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="rtoExportMemory()" style="padding:8px 16px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:none;border-radius:8px;color:#fff;font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer">📤 Export Memory (PC pe)</button>
+          <label style="padding:8px 16px;background:linear-gradient(135deg,#15803d,#22c55e);border:none;border-radius:8px;color:#fff;font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer">
+            📥 Import Memory (Mobile pe)
+            <input type="file" id="rtoImportFile" accept=".json" style="display:none" onchange="rtoImportMemory(this)">
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scanner Section -->
+    <div style="background:linear-gradient(135deg,#0f172a,#1e293b);border:1.5px solid #334155;border-radius:16px;padding:18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px">📷</span>
+          <div><div style="font-size:14px;font-weight:800;color:#f0f0ff">Live AWB Scanner</div><div style="font-size:11px;color:#94a3b8">Courier boy saamne ho — barcode scan karo, turant Packet ID milega</div></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="rtoStartScan()" id="rtoBtnScan" style="padding:10px 20px;background:linear-gradient(135deg,#f7971e,#ffd200);border:none;border-radius:10px;color:#78350f;font-family:Nunito,sans-serif;font-size:14px;font-weight:800;cursor:pointer">📷 Start Scanner</button>
+          <button onclick="rtoStopScan()" id="rtoBtnStop" style="display:none;padding:10px 20px;background:#ef4444;border:none;border-radius:10px;color:#fff;font-family:Nunito,sans-serif;font-size:14px;font-weight:800;cursor:pointer">⏹ Stop</button>
+        </div>
+      </div>
+      <div id="rtoScanArea" style="display:none">
+        <video id="rtoVideo" style="width:100%;border-radius:10px;max-height:260px;object-fit:cover;background:#000" playsinline autoplay muted></video>
+        <div style="margin-top:6px;font-size:11px;color:#64748b;text-align:center">Barcode ko camera ke saamne rakhein</div>
+      </div>
+      <!-- Manual fallback -->
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input id="rtoManualAwb" type="text" placeholder="Ya AWB manually type karo..." style="flex:1;background:#1e293b;border:1.5px solid #334155;border-radius:8px;padding:10px 14px;color:#f0f0ff;font-family:'Fira Code',monospace;font-size:14px;font-weight:700" onkeydown="if(event.key==='Enter')rtoLookupAWB(this.value)">
+        <button onclick="rtoLookupAWB(document.getElementById('rtoManualAwb').value)" style="padding:10px 16px;background:#334155;border:none;border-radius:8px;color:#f0f0ff;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer">🔍 Lookup</button>
+      </div>
+      <div id="rtoExcelStatus" style="margin-top:8px;font-size:11px;font-weight:700;color:#64748b;text-align:center">📊 Excel upload karo neeche → phir scan karo</div>
+      <!-- Scan Result -->
+      <div id="rtoScanResult" style="display:none;margin-top:14px;background:#0f172a;border:2px solid #f7971e;border-radius:12px;padding:18px">
+        <div style="font-size:11px;font-weight:800;color:#f7971e;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">📦 Scan Result</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="rtoScanGrid"></div>
+      </div>
+    </div>
+
+    <!-- Step 1: Upload files -->
+    <div class="rto-upload-row">
+      <!-- RTO PDF -->
+      <div class="rto-uz" id="rtoUz1" onclick="document.getElementById('rtoF1').click()">
+        <input type="file" id="rtoF1" accept=".pdf">
+        <span class="rto-uz-icon">📋</span>
+        <h4>RTO Manifest PDF</h4>
+        <p>Delhivery / Meesho RTO POD PDF</p>
+        <div class="rto-fname" id="rtoF1Name"></div>
+      </div>
+      <!-- Dispatch Excel — Now Order ID + Packet ID (no AWB needed) -->
+      <div class="rto-uz" id="rtoUz2" onclick="document.getElementById('rtoF2').click()">
+        <input type="file" id="rtoF2" accept=".xlsx,.xls,.csv">
+        <span class="rto-uz-icon">📊</span>
+        <h4>Dispatch Excel / CSV</h4>
+        <p><b style="color:#f7971e">AWB</b> + <b>Packet ID</b> columns hone chahiye<br><span style="font-size:10px;color:#9ca3af">(RTO PDF optional hai — sirf Excel se bhi scan kaam karega)</span></p>
+        <div class="rto-fname" id="rtoF2Name"></div>
+      </div>
+    </div>
+
+    <!-- Config row -->
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px;background:var(--white);border-radius:14px;padding:14px 16px;box-shadow:var(--sh)">
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Forward Shipping Cost (₹)</div>
+        <input type="number" id="rtoCostFwd" value="50" style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:Nunito,sans-serif;font-size:14px;font-weight:700">
+      </div>
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Reverse Shipping Cost (₹)</div>
+        <input type="number" id="rtoCostRev" value="50" style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:Nunito,sans-serif;font-size:14px;font-weight:700">
+      </div>
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Packing Cost (₹)</div>
+        <input type="number" id="rtoCostPack" value="20" style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:Nunito,sans-serif;font-size:14px;font-weight:700">
+      </div>
+      <button class="btn-grad" style="align-self:flex-end;margin-top:0" onclick="rtoProcess()">⚡ Process Karo</button>
+    </div>
+
+    <div class="ebox" id="rtoErr"></div>
+    <div class="pbox" id="rtoProg" style="display:none"><div class="ph"><span class="plbl" id="rtoPL">Processing...</span><span class="ppct" id="rtoPP"></span></div><div class="po"><div class="pi" id="rtoPB" style="background:linear-gradient(90deg,#f7971e,#ffd200)"></div></div></div>
+
+    <!-- Results -->
+    <div id="rtoRes" style="display:none">
+      <!-- Alert for rejected items -->
+      <div class="alert-box" id="rtoAlert">
+        <div class="ab-icon">🚨</div>
+        <div><h4 id="rtoAlertTitle">Rejected Shipments Found!</h4><p id="rtoAlertMsg"></p></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="rto-stats">
+        <div class="rto-stat rs-blue"><div class="rs-lbl">Total Scanned</div><div class="rs-val" id="rtoTotal">0</div><div class="rs-sub">AWB in manifest</div></div>
+        <div class="rto-stat rs-green"><div class="rs-lbl">Accepted / Delivered</div><div class="rs-val" id="rtoAccepted">0</div><div class="rs-sub">Successfully returned</div></div>
+        <div class="rto-stat rs-red"><div class="rs-lbl">Rejected</div><div class="rs-val" id="rtoRejected">0</div><div class="rs-sub">Action required!</div></div>
+        <div class="rto-stat rs-orange"><div class="rs-lbl">Estimated Loss</div><div class="rs-val" id="rtoLoss">₹0</div><div class="rs-sub">Fwd + Rev + Packing</div></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="rto-tabs">
+        <button class="rto-tab active" onclick="rtoTab('rtoP1',this)">📋 All AWBs</button>
+        <button class="rto-tab" onclick="rtoTab('rtoP2',this)">🚨 Rejected <span id="rtoRejBadge" style="background:#dc2626;color:#fff;border-radius:8px;padding:1px 6px;font-size:10px;margin-left:4px">0</span></button>
+        <button class="rto-tab" onclick="rtoTab('rtoP3',this)">✅ Accepted</button>
+        <button class="rto-tab" id="rtoMatchTab" style="display:none" onclick="rtoTab('rtoP4',this)">🔗 Rejected + Packet ID</button>
+        <button class="rto-tab" onclick="rtoTab('rtoP5',this)">📊 Reason Wise</button>
+      </div>
+
+      <!-- Panel 1: All AWBs -->
+      <div class="rto-panel active" id="rtoP1">
+        <div class="twrap"><div class="ttbar"><span class="ttitle">ALL AWBs</span><input class="sinp" placeholder="🔍 AWB search..." oninput="rtoFt('rtoT1',this.value)"><span class="rct" id="rtoCt1"></span></div>
+        <div class="tscroll"><table id="rtoT1"><thead><tr><th>AWB Number</th><th>Status</th><th>Remark</th></tr></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- Panel 2: Rejected -->
+      <div class="rto-panel" id="rtoP2">
+        <div class="twrap"><div class="ttbar"><span class="ttitle">🚨 REJECTED — ACTION REQUIRED</span><span class="rct" id="rtoCt2"></span></div>
+        <div class="tscroll"><table id="rtoT2"><thead><tr><th>AWB Number</th><th>Remark / Reason</th><th>Loss (₹)</th></tr></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- Panel 3: Accepted -->
+      <div class="rto-panel" id="rtoP3">
+        <div class="twrap"><div class="ttbar"><span class="ttitle">✅ ACCEPTED — RECEIVED IN WAREHOUSE</span><span class="rct" id="rtoCt3"></span></div>
+        <div class="tscroll"><table id="rtoT3"><thead><tr><th>AWB Number</th><th>Status</th><th>Remark</th></tr></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- Panel 4: Rejected + Packet ID match -->
+      <div class="rto-panel" id="rtoP4">
+        <div class="twrap"><div class="ttbar"><span class="ttitle">🔗 REJECTED INVENTORY — AWB + PACKET ID</span><span class="rct" id="rtoCt4"></span></div>
+        <div style="padding:10px 16px;background:#fff7ed;border-bottom:1px solid #fed7aa;font-size:12px;color:#92400e;font-weight:700">Ye items warehouse mein dhundho aur stock update karo. Courier se bhi claim raise karo.</div>
+        <div class="tscroll"><table id="rtoT4"><thead><tr><th>AWB Number</th><th>Packet ID</th><th>SKU</th><th>Remark</th><th>Loss (₹)</th></tr></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- Panel 5: Reason wise -->
+      <div class="rto-panel" id="rtoP5">
+        <div class="twrap"><div class="ttbar"><span class="ttitle">📊 REASON-WISE ANALYSIS</span></div>
+        <div class="tscroll"><table id="rtoT5"><thead><tr><th>Reason / Remark</th><th>Count</th><th>% of Total</th></tr></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- Download -->
+      <div class="dl-sec" style="margin-top:16px">
+        <button class="btn-dl orange" onclick="rtoDlXL()">📥 Excel Download</button>
+        <button class="breset" onclick="rtoReset()">🔄 Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let PDFDoc=null;
+window.addEventListener('load',()=>{try{PDFDoc=PDFLib.PDFDocument;console.log('✅ pdf-lib ready');}catch(e){console.error('pdf-lib error:',e);}});
+
+// ── NAV ────────────────────────────────────────────────────
+function goTo(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function goHome(){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('homeView').classList.add('active');window.scrollTo(0,0);}
+
+// Setup drag & drop for all zones
+document.querySelectorAll('.uz[id]').forEach(z=>{
+  z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('drag-over');});
+  z.addEventListener('dragleave',()=>z.classList.remove('drag-over'));
+  z.addEventListener('drop',e=>{
+    e.preventDefault();z.classList.remove('drag-over');const f=e.dataTransfer.files;
+    const id=z.id;
+    if(id==='lZ'&&f[0])lLoad(f[0]);
+    else if(id==='mZ')mAdd(f);
+    else if(id==='cZ'&&f[0])cLoad(f[0]);
+    else if(id==='sZ'&&f[0])sLoad(f[0]);
+    else if(id==='skZ'&&f[0])skLoad(f[0]);
+  });
+});
+
+// ══════════════════════════════════════════════════════════
+// LABEL PROCESSOR
+// ══════════════════════════════════════════════════════════
+const CP={'Valmo':0,'Delhivery':1,'Xpress Bees':2};
+let lRaw=null,lOrders=[],lSPages=[],lMode='excel',lPT='all';
+
+document.getElementById('lF').addEventListener('change',e=>{if(e.target.files[0])lLoad(e.target.files[0]);});
+function lLoad(file){
+  if(!file||file.type!=='application/pdf'){lSE('❌ Sirf PDF upload karo!');return;}lCE();
+  const r=new FileReader();
+  r.onload=async ev=>{
+    lRaw=new Uint8Array(ev.target.result);
+    const pdf=await pdfjsLib.getDocument({data:lRaw.slice()}).promise;
+    document.getElementById('lMR').style.display='grid';
+    document.getElementById('lBtn').classList.add('show');
+    document.getElementById('lUT').textContent='✅ '+file.name;
+    document.getElementById('lUS').textContent=(file.size/1024/1024).toFixed(1)+' MB — '+pdf.numPages+' pages';
+  };r.readAsArrayBuffer(file);
+}
+function lSM(m){lMode=m;document.getElementById('lME').classList.toggle('active',m==='excel');document.getElementById('lMP').classList.toggle('active',m==='pdf');document.getElementById('lST').classList.toggle('show',m==='pdf');}
+function lSPT(t){lPT=t;document.getElementById('lTA').classList.toggle('active',t==='all');document.getElementById('lTS').classList.toggle('active',t==='sep');}
+
+async function lProcess(){
+  if(!lRaw)return;lOrders=[];lSPages=[];lCE();
+  document.getElementById('lProg').classList.add('show');document.getElementById('lRes').style.display='none';
+  const btn=document.getElementById('lBtn');btn.disabled=true;
+  document.getElementById('lPL').textContent='📖 Platform detect ho raha hai...';
+  const pdf=await pdfjsLib.getDocument({data:lRaw.slice()}).promise;
+  const total=pdf.numPages;lSP(0,total);lLog('lPLog','📄 '+total+' pages');
+  
+  // Auto-detect platform from first 3 pages
+  let sampleText='';
+  for(let pi=1;pi<=Math.min(3,total);pi++){
+    const pg=await pdf.getPage(pi);const ct=await pg.getTextContent();
+    sampleText+=ct.items.map(it=>it.str).join(' ');
+  }
+  lPlatform=detectPlatform(sampleText.toLowerCase());
+  const platformNames={'meesho':'🛍️ Meesho','flipkart':'🛒 Flipkart','amazon':'📦 Amazon','myntra':'👗 Myntra','ajio':'🏷️ Ajio','generic':'📋 Generic'};
+  const platformColors={'meesho':'#e91e8c','flipkart':'#2874f0','amazon':'#ff9900','myntra':'#ff3f6c','ajio':'#1b325e','generic':'#667eea'};
+  lLog('lPLog','🔍 Platform detected: '+platformNames[lPlatform]);
+  document.getElementById('lPL').textContent='📖 Labels padh raha hoon ('+platformNames[lPlatform]+')...';
+  // Process in chunks of 20 for large PDFs
+  const CHUNK=20;
+  for(let i=1;i<=total;i++){
+    const pg=await pdf.getPage(i);
+    const ct=await pg.getTextContent();
+    // Flipkart: only parse above dashed separator line
+    const lines=(lPlatform==='flipkart')?mkLinesAboveDash(ct):mkLines(ct);
+    const row=extract(lines);
+    const addr=extractAddress(lines);
+    if(row){
+      const fullRow={...row,...addr};
+      lOrders.push(fullRow);
+      lSPages.push({...fullRow,pi:i-1});
+    } else {
+      lSPages.push({sku:'',courier:lPlatform==='amazon'?'Amazon Logistics':lPlatform==='flipkart'?'Ekart':'Unknown',qty:0,name:'',pincode:'',pi:i-1});
+    }
+    lSP(i,total);
+    if(i%CHUNK===0){lLog('lPLog','✔ '+i+'/'+total);await new Promise(r=>setTimeout(r,0));}
+  }
+  // ── Amazon: page 1 = shipping label (no SKU), page 2 = packing slip (has ASIN/SKU) ──
+  // Pair them: copy SKU from even page to odd page, keep both pages for sorting
+  if(lPlatform==='amazon'){
+    for(let i=0;i<lSPages.length;i+=2){
+      const labelPg=lSPages[i],packPg=lSPages[i+1];
+      if(!packPg)break;
+      // Packing slip (page 2 of pair) has the SKU
+      const sku=packPg.sku||labelPg.sku;
+      const courier=packPg.courier||labelPg.courier||'Amazon Logistics';
+      const qty=packPg.qty||labelPg.qty||1;
+      // Both pages get same SKU (so they sort together)
+      lSPages[i]={...lSPages[i],sku,courier,qty};
+      lSPages[i+1]={...lSPages[i+1],sku,courier,qty};
+    }
+    // lOrders = 1 entry per order (every 2 pages = 1 order)
+    lOrders=[];
+    for(let i=0;i<lSPages.length;i+=2){
+      if(lSPages[i]&&lSPages[i].sku)lOrders.push({sku:lSPages[i].sku,qty:lSPages[i].qty,courier:lSPages[i].courier});
+    }
+  }
+
+  // ── Flipkart: remove non-label pages (cover/summary) ──
+  if(lPlatform==='flipkart'){
+    lSPages=lSPages.filter(p=>p.sku&&p.sku!=='');
+    // Rebuild lOrders from filtered lSPages to keep counts in sync
+    lOrders=lSPages.map(p=>({sku:p.sku,qty:p.qty,courier:p.courier}));
+  }
+
+  lSPages.sort((a,b)=>{const d=(CP[a.courier]??99)-(CP[b.courier]??99);if(d!==0)return d;const at=a.sku.split('-')[0],bt=b.sku.split('-')[0];return at!==bt?at.localeCompare(bt):a.sku.localeCompare(b.sku);});
+  lLog('lPLog','✅ '+lOrders.length+' orders extracted!');
+  // ── Save AWB→OrderID to IndexedDB memory ──────────────────
+  try{
+    const allLines_raw=[];
+    // Re-scan all pages just for AWB/OrderID extraction (non-destructive)
+    const mappings=[];
+    for(let i=1;i<=total;i++){
+      const pg2=await pdf.getPage(i);
+      const ct2=await pg2.getTextContent();
+      const fullLines=mkLines(ct2);
+      const{awb,orderId}=extractAWBandOrderId(fullLines);
+      if(awb&&orderId){
+        const skuEntry=lSPages.find(p=>p.pi===i-1);
+        mappings.push({awb,orderId,sku:skuEntry?.sku||'',courier:lPlatform,ts:Date.now()});
+      }
+    }
+    if(mappings.length>0){
+      const newlySaved=await rtoSaveMapping(mappings);
+      const skipped=mappings.length-newlySaved;
+      lLog('lPLog','🧠 '+newlySaved+' new AWB mappings saved'+(skipped>0?' ('+skipped+' already existed, skipped)':''));
+      rtoUpdateMemCount();
+    }
+  }catch(e){/* silent */}
+  if(lMode==='pdf'){
+    if(!PDFDoc){lSE('❌ pdf-lib load nahi hua. Page reload karo!');btn.disabled=false;return;}
+    document.getElementById('lPL').textContent='🔀 PDF sort ho rahi hai (instant)...';
+    try{
+      if(lPT==='all'){
+        lLog('lPLog','🔀 Sorting all pages...');
+        const blob=await pdfSort(lRaw,lSPages.map(p=>({pi:p.pi,qty:p.qty||1})));
+        setLink('lAll',blob);lLog('lPLog','✅ Done! Download karo.');
+      } else {
+        for(const[c,id]of[['Valmo','ldV'],['Delhivery','ldD'],['Xpress Bees','ldX'],['Ekart','ldE'],['Amazon Logistics','ldA']]){
+          const pgInfos=lSPages.filter(p=>p.courier===c).map(p=>({pi:p.pi,qty:p.qty||1}));
+          if(pgInfos.length>0){lLog('lPLog','🔀 '+c+' ('+pgInfos.length+')...');const blob=await pdfSort(lRaw,pgInfos);setLink(id,blob);lLog('lPLog','✅ '+c+' ready!');}
+        }
+      }
+    }catch(e){lSE('❌ '+e.message);}
+  }
+  lRender();btn.disabled=false;
+}
+
+async function pdfSort(raw,pageInfos){
+  // pageInfos = array of {pi, qty} OR legacy array of numbers
+  const isLegacy=typeof pageInfos[0]==='number';
+  const infos=isLegacy?pageInfos.map(pi=>({pi,qty:1})):pageInfos;
+  const src=await PDFDoc.load(raw);const nd=await PDFDoc.create();
+  const pages=await nd.copyPages(src,infos.map(p=>p.pi));
+  const rgb=PDFLib.rgb;
+  for(let i=0;i<pages.length;i++){
+    nd.addPage(pages[i]);
+    const qty=infos[i].qty||1;
+    if(qty>1){
+      const page=nd.getPage(i);
+      const{width,height}=page.getSize();
+      // Red badge top-right
+      const bw=80,bh=32,bx=width-bw-8,by=height-bh-8;
+      page.drawRectangle({x:bx,y:by,width:bw,height:bh,color:rgb(0.85,0.1,0.1),opacity:0.92,borderRadius:4});
+      page.drawText(`${qty}x MULTI`,{x:bx+8,y:by+10,size:14,color:rgb(1,1,1)});
+    }
+  }
+  return new Blob([await nd.save()],{type:'application/pdf'});
+}
+function setLink(id,blob){const a=document.getElementById(id);if(a.href&&a.href.startsWith('blob:'))URL.revokeObjectURL(a.href);a.href=URL.createObjectURL(blob);a.style.display='flex';}
+
+function mkLines(ct){const y={};for(const it of ct.items){const k=Math.round(it.transform[5]);if(!y[k])y[k]=[];y[k].push(it.str);}return Object.keys(y).map(Number).sort((a,b)=>b-a).map(k=>y[k].join(' ').trim()).filter(l=>l);}
+
+// Flipkart pages have label on top + tax invoice below, separated by "- - - -" dashes
+// Only process above the dashed line (the actual label portion)
+function mkLinesAboveDash(ct){
+  const y={};for(const it of ct.items){const k=Math.round(it.transform[5]);if(!y[k])y[k]=[];y[k].push(it.str);}
+  const sorted=Object.keys(y).map(Number).sort((a,b)=>b-a);
+  const allLines=sorted.map(k=>({y:k,text:y[k].join(' ').trim()})).filter(l=>l.text);
+  // Find dashed separator line — typically "- - - - - - -" or many dashes
+  let cutIdx=allLines.length;
+  for(let i=0;i<allLines.length;i++){
+    const t=allLines[i].text.replace(/\s/g,'');
+    if(t.length>=6&&/^[-–—]{4,}$/.test(t)){cutIdx=i;break;}
+    // Also detect series of "- " repeated
+    if((t.match(/-/g)||[]).length>=5&&t.length<=t.replace(/[^-\s]/g,'').length+3){cutIdx=i;break;}
+  }
+  return allLines.slice(0,cutIdx).map(l=>l.text);
+}
+
+// ── PLATFORM DETECTION ─────────────────────────────────────
+let lPlatform='unknown';
+function detectPlatform(fullText){
+  // NOTE: fullText is already .toLowerCase() — all checks must be lowercase!
+  if(fullText.includes('meesho')||fullText.includes('valmo')||fullText.includes('delhivery')||fullText.includes('xpress bees'))return'meesho';
+  // Flipkart: e-kart/ekart logistics, shopsy, or AWB prefix FMPC/FMPP/OD order IDs
+  if(fullText.includes('flipkart')||fullText.includes('e-kart')||fullText.includes('ekart')||fullText.includes('shopsy')||/\bfmpc\d|\bfmpp\d/.test(fullText)||/\bod\d{12}/.test(fullText))return'flipkart';
+  // Amazon: amazon, amzn, fulfillment, or ASIN pattern
+  if(fullText.includes('amazon')||fullText.includes('amzn')||fullText.includes('fulfillment')||/\bb0[0-9a-z]{8}\b/.test(fullText))return'amazon';
+  if(fullText.includes('myntra'))return'myntra';
+  if(fullText.includes('ajio'))return'ajio';
+  return'generic';
+}
+
+// ── COURIER DETECTION (all platforms) ─────────────────────
+function detectCourier(txt, platform){
+  if(txt.includes('Delhivery'))return'Delhivery';
+  if(txt.includes('Xpress Bees')||txt.includes('XpressBees'))return'Xpress Bees';
+  if(txt.includes('Valmo'))return'Valmo';
+  if(txt.includes('Ekart')||txt.includes('EKART')||txt.includes('E-Kart')||txt.includes('ekart'))return'Ekart';
+  if(txt.includes('BlueDart')||txt.includes('Blue Dart'))return'BlueDart';
+  if(txt.includes('DTDC'))return'DTDC';
+  if(txt.includes('Amazon Logistics')||txt.includes('Amazon Shipping')||txt.includes('AMZL'))return'Amazon Logistics';
+  if(txt.includes('Shadowfax'))return'Shadowfax';
+  if(txt.includes('Ecom Express')||txt.includes('Ecom Ex'))return'Ecom Express';
+  if(txt.includes('Shiprocket'))return'Shiprocket';
+  if(txt.includes('Dunzo'))return'Dunzo';
+  // Platform-based default if nothing detected
+  if(platform==='flipkart')return'Ekart';
+  if(platform==='amazon')return'Amazon Logistics';
+  return'Other';
+}
+
+// ── MEESHO EXTRACTOR ──────────────────────────────────────
+function extractMeesho(lines){
+  const txt=lines.join('\n');
+  if(!txt.includes('Product Details'))return null;
+  const c=detectCourier(txt,"meesho");
+  let hi=-1;
+  for(let i=0;i<lines.length;i++){if(lines[i].includes('SKU')&&(lines[i].includes('Qty')||lines[i].includes('Size')||lines[i].includes('Color'))){hi=i;break;}}
+  if(hi===-1)return null;
+  for(let off=1;off<=3;off++){
+    const rl=lines[hi+off];if(!rl)continue;
+    const t=rl.trim().split(/\s+/);if(t.length<2)continue;
+    const sku=t[0];let qty=null;
+    for(let k=0;k<t.length-1;k++){if(t[k].toLowerCase()==='free'&&t[k+1].toLowerCase()==='size'&&k+2<t.length){const n=parseInt(t[k+2]);if(!isNaN(n)){qty=n;break;}}}
+    if(qty===null&&t.length>=4&&!isNaN(parseInt(t[3])))qty=parseInt(t[3]);
+    if(qty===null){for(const tok of t.slice(1)){const n=parseInt(tok);if(!isNaN(n)&&n>0&&n<100){qty=n;break;}}}
+    if(sku&&qty!==null)return{sku:sku.replace(/^P\d{2}/,''),qty,courier:c};
+  }
+  return null;
+}
+
+// ── FLIPKART EXTRACTOR ────────────────────────────────────
+// AWB prefixes to ignore (not SKUs)
+const FK_AWB_RE=/^(FMPC|FMPP|FMLM|FMMO|OD\d|EKRT|EKMP)/i;
+// Pattern that identifies a real Flipkart/Shopsy label page
+const FK_LABEL_RE=/\b(FMPC|FMPP|FMLM|FMMO)\d|\bOD\d{10,}|\bE-Kart|ekart|shopsy/i;
+function extractFlipkart(lines){
+  const txt=lines.join('\n');
+  if(!FK_LABEL_RE.test(txt))return null;
+  const courier=detectCourier(txt,"flipkart");
+
+  // ── Priority: Shopsy_ pattern anywhere in text (case-insensitive prefix) ──
+  // Handles: Shopsy_X, shopsy_X, SHOPSY_X — any mix of case
+  const shopPat=/\b((?:shopsy)_[A-Za-z0-9][A-Za-z0-9_-]{2,})\b/gi;
+  const shopMatches=[...txt.matchAll(shopPat)];
+  if(shopMatches.length>0)return{sku:shopMatches[0][1],qty:1,courier};
+
+  // ── Method 1: SKU ID table header ──
+  let hi=-1;
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    if((l.includes('SKU ID')||l.includes('SKU')||l.includes('Item ID'))&&
+       (l.includes('QTY')||l.includes('Qty')||l.includes('Description'))){hi=i;break;}
+  }
+  if(hi!==-1){
+    for(let off=1;off<=5;off++){
+      const rl=lines[hi+off];if(!rl)continue;
+      // Try with row number prefix: "1 SKU_CODE | ..."
+      let m=rl.match(/^\s*\d+\s+([A-Za-z][A-Za-z0-9_-]{3,})/);
+      // Try without row number (SKU starts directly)
+      if(!m)m=rl.match(/^([A-Za-z][A-Za-z0-9_-]{3,}[-_][A-Za-z0-9_-]{2,})/);
+      let sku=m?m[1]:null;
+      if(sku)sku=sku.split('|')[0].trim();
+      if(!sku||sku.length<4||FK_AWB_RE.test(sku))continue;
+      const toks=rl.trim().split(/\s+/);
+      let qty=1;
+      for(let ti=toks.length-1;ti>=0;ti--){const n=parseInt(toks[ti]);if(!isNaN(n)&&n>0&&n<1000){qty=n;break;}}
+      return{sku,qty,courier};
+    }
+  }
+
+  // ── Method 2: Standard UPPER-HYPHEN SKU scan ──
+  for(const line of lines){
+    const m=line.match(/\b([A-Z]{2,}[A-Z0-9]*[-_][A-Z0-9_-]{3,})\b/);
+    if(m&&!FK_AWB_RE.test(m[1])&&m[1].length<=40)return{sku:m[1],qty:1,courier};
+  }
+
+  // ── Method 3: FSN fallback ──
+  for(const line of lines){
+    const fsnM=line.match(/\b([A-Z0-9]{8,16})\b/);
+    if(fsnM&&line.toLowerCase().includes('fsn'))return{sku:fsnM[1],qty:1,courier};
+  }
+
+  return{sku:'(SKU unreadable)',qty:1,courier};
+}
+
+// ── AMAZON EXTRACTOR ──────────────────────────────────────
+function extractAmazon(lines){
+  const txt=lines.join('\n');
+  const courier=detectCourier(txt,"amazon");
+
+  // Method 1: "Seller SKU" field on label
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    if(/seller\s*sku|sku\s*[:=]/i.test(l)){
+      const colonM=l.match(/sku\s*[:=]\s*([A-Za-z0-9_\-]{3,})/i);
+      if(colonM&&colonM[1].length>3)return{sku:colonM[1],qty:1,courier};
+      const next=lines[i+1]||'';
+      const tok=next.trim().split(/\s+/)[0];
+      if(tok&&tok.length>3&&/[A-Za-z]/.test(tok))return{sku:tok,qty:1,courier};
+    }
+  }
+
+  // Method 2: Invoice format — SKU inside parentheses: ASIN ( SKU-CODE )
+  const parPat=/\(\s*([A-Z][A-Z0-9_]{1,}-[A-Z0-9_\-]{2,})\s*\)/g;
+  const parMatches=[...txt.matchAll(parPat)];
+  if(parMatches.length>0){
+    let qty=1;
+    const qM=txt.match(/Qty[\s\S]{0,40}?(\d+)/i);
+    if(qM)qty=parseInt(qM[1]);
+    return{sku:parMatches[0][1],qty,courier};
+  }
+
+  // Method 3: ASIN (B0XXXXXXXXX) — always present on Amazon labels/packing slips
+  for(const line of lines){
+    const asin=line.match(/\b(B[0-9A-Z]{9})\b/);
+    if(asin)return{sku:asin[1],qty:1,courier};
+  }
+
+  // Method 4: "ASIN" header then next line
+  for(let i=0;i<lines.length;i++){
+    if(lines[i].includes('ASIN')||(lines[i].includes('Qty')&&lines[i].includes('Product'))){
+      for(let off=1;off<=3;off++){
+        const rl=lines[i+off];if(!rl)continue;
+        const t=rl.trim().split(/\s+/);if(!t[0]||t[0].length<3)continue;
+        let qty=1;
+        for(const tok of t.slice(1)){const n=parseInt(tok);if(!isNaN(n)&&n>0&&n<1000){qty=n;break;}}
+        return{sku:t[0],qty,courier};
+      }
+    }
+  }
+
+  // Method 5: Amazon Order ID as fallback identifier (e.g. 402-1234567-1234567)
+  const orderM=txt.match(/\b(\d{3}-\d{7}-\d{7})\b/);
+  if(orderM)return{sku:'Order:'+orderM[1],qty:1,courier};
+
+  // Shipping label page with no product info — return courier placeholder so page is kept
+  // (will be paired with packing slip by the pairing logic in lProcess)
+  return null;
+}
+
+// ── GENERIC EXTRACTOR ─────────────────────────────────────
+// Tokens that look like AWB/tracking — NOT SKUs
+const GENERIC_SKIP=/^(FMPC|FMPP|FMLM|OD\d{5,}|AMZN|EKRT|IN-|HBX|TWC|CPD|HBD|STD|AWB|COD|GST|PAN|HSN|QTY|SKU)/i;
+function extractGeneric(lines,courier){
+  if(!courier)courier=detectCourier(lines.join('\n'),lPlatform);
+  const keywords=['SKU','Item','Product','ITEM','PRODUCT','Code','Description'];
+  let hi=-1;
+  for(let i=0;i<lines.length;i++){
+    if(keywords.some(k=>lines[i].includes(k))&&(lines[i].includes('Qty')||lines[i].includes('QTY')||lines[i].includes('Quantity'))){hi=i;break;}
+  }
+  if(hi!==-1){
+    for(let off=1;off<=4;off++){
+      const rl=lines[hi+off];if(!rl||rl.length<2)continue;
+      const t=rl.trim().split(/\s+/);
+      // Find first non-numeric, non-AWB token that has letters
+      let sku=null;
+      for(const tok of t){
+        if(tok.length>=3&&/[A-Za-z]/.test(tok)&&!GENERIC_SKIP.test(tok)&&!/^\d+$/.test(tok)){sku=tok;break;}
+      }
+      if(!sku)continue;
+      let qty=1;
+      for(const tok of t.slice(1)){const n=parseInt(tok);if(!isNaN(n)&&n>0&&n<10000){qty=n;break;}}
+      return{sku,qty,courier};
+    }
+  }
+  // Last resort: any alphanumeric code with letters+hyphens, not AWB
+  for(const line of lines){
+    const m=line.match(/\b([A-Z][A-Z0-9\-_]{4,20})\b/);
+    if(m&&!GENERIC_SKIP.test(m[1])&&!line.toLowerCase().includes('address')&&!line.toLowerCase().includes('pincode')){
+      return{sku:m[1],qty:1,courier};
+    }
+  }
+  return null;
+}
+
+// ── ADDRESS EXTRACTOR (for duplicate detection) ──────────
+function extractAddress(lines){
+  const txt=lines.join('\n');
+  // Customer name
+  let name='';
+  const nameM=txt.match(/Name:\s*([^\n,]+)/i);
+  if(nameM)name=nameM[1].trim().replace(/[^a-zA-Z0-9\s]/g,'').toLowerCase().trim();
+
+  // Pincode (6-digit)
+  let pincode='';
+  const pinM=txt.match(/\b(\d{6})\b/);
+  if(pinM)pincode=pinM[1];
+
+  // Full address — everything between "address:" label and pincode line
+  let fullAddress='';
+  // Try to grab Shipping/Customer address block
+  const addrM=txt.match(/(?:Shipping|Customer)\s*(?:\/\s*Customer)?\s*address:\s*\n?([\s\S]{10,300}?)(?:\n\s*\n|Sold By|GSTIN|SKU|HBD|CPD|$)/i);
+  if(addrM){
+    fullAddress=addrM[1]
+      .replace(/Name:\s*[^\n]+/i,'')   // remove name line (already captured)
+      .replace(/[^a-zA-Z0-9\s,\/\-]/g,' ')
+      .replace(/\s+/g,' ')
+      .toLowerCase()
+      .trim();
+  }
+
+  return{name,pincode,fullAddress};
+}
+
+// ── MASTER EXTRACT FUNCTION ───────────────────────────────
+function extract(lines){
+  const txt=lines.join('\n');
+  const platform=lPlatform;
+  if(platform==='meesho')return extractMeesho(lines);
+  if(platform==='flipkart')return extractFlipkart(lines);
+  if(platform==='amazon')return extractAmazon(lines);
+  // For myntra, ajio, generic — try generic
+  return extractGeneric(lines,detectCourier(txt,lPlatform))||null;
+}
+
+function lRender(){
+  document.getElementById('lProg').classList.remove('show');document.getElementById('lRes').style.display='block';
+  const tq=lOrders.reduce((s,r)=>s+r.qty,0),us=new Set(lOrders.map(r=>r.sku)).size,uc=new Set(lOrders.map(r=>r.courier)).size;
+  ['lsO','lsQ','lsS','lsC'].forEach((id,i)=>document.getElementById(id).textContent=[lOrders.length,tq,us,uc][i]);
+  const cm={};lOrders.forEach(r=>{cm[r.courier]=(cm[r.courier]||0)+r.qty;});const mx=Math.max(...Object.values(cm),1);
+  const courierEntries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);
+  const barIds=[['cbarV','cbarVN','lcV','lcVB'],['cbarD','cbarDN','lcD','lcDB'],['cbarX','cbarXN','lcX','lcXB']];
+  barIds.forEach(([bid,nid,qid,bid2],idx)=>{
+    const bar=document.getElementById(bid);
+    if(idx<courierEntries.length){
+      const[courier,qty]=courierEntries[idx];bar.style.display='';
+      document.getElementById(nid).textContent=courier;
+      document.getElementById(qid).textContent=qty;
+      document.getElementById(bid2).style.width=(qty/mx*100)+'%';
+    } else {bar.style.display='none';}
+  });
+
+  // ── Detect duplicates — name + pincode + full address ──
+  const dupMap={};
+  lOrders.forEach((r,idx)=>{
+    const n=(r.name||'').replace(/\s+/g,'').toLowerCase();
+    const p=(r.pincode||'');
+    const a=(r.fullAddress||'').replace(/\s+/g,'').toLowerCase();
+    // Key = name + pincode + address (all 3 must match)
+    // If any is missing, skip (avoid false positives)
+    if(!n||!p)return;
+    const key=n+'|'+p+'|'+a;
+    if(!dupMap[key])dupMap[key]=[];
+    dupMap[key].push({...r,_idx:idx});
+  });
+  const dupGroups=Object.values(dupMap).filter(g=>g.length>1);
+  const dupOrderIdxs=new Set(dupGroups.flat().map(r=>r._idx));
+  document.getElementById('ltDupBtn').style.display=dupGroups.length>0?'':'none';
+  document.getElementById('ltDupCount').textContent=dupGroups.flat().length;
+
+  const isX=lMode==='excel';
+  document.getElementById('lEV').style.display=isX?'block':'none';document.getElementById('lPV').style.display=isX?'none':'block';
+  document.getElementById('lXL').style.display=isX?'flex':'none';document.getElementById('lAll').style.display=(!isX&&lPT==='all')?'flex':'none';document.getElementById('lSep').style.display=(!isX&&lPT==='sep')?'flex':'none';
+  if(isX){lRT(dupOrderIdxs);lRD(dupGroups);}else lRS();
+  const sk=lSPages.filter(p=>!p.sku).length;if(sk>0){const sn=document.getElementById('lSk');sn.textContent='⚠️ '+sk+' pages skip hui';sn.classList.add('show');}
+  const pNames={'meesho':'🛍️ Meesho','flipkart':'🛒 Flipkart','amazon':'📦 Amazon','myntra':'👗 Myntra','ajio':'🏷️ Ajio','generic':'📋 Generic'};
+  const pColors={'meesho':'#e91e8c','flipkart':'#2874f0','amazon':'#ff9900','myntra':'#ff3f6c','ajio':'#1b325e','generic':'#667eea'};
+  const pb=document.getElementById('lPlatformBadge');
+  pb.style.display='block';
+  pb.innerHTML=`<div style="display:inline-flex;align-items:center;gap:10px;background:${pColors[lPlatform]||'#667eea'}15;border:1.5px solid ${pColors[lPlatform]||'#667eea'}40;border-radius:12px;padding:10px 18px;"><span style="font-size:20px">${pNames[lPlatform]||'📋 Generic'}</span><div><div style="font-size:13px;font-weight:800;color:${pColors[lPlatform]||'#667eea'}">${pNames[lPlatform]||'Generic'} Labels Detected</div><div style="font-size:11px;color:#6b7280;font-weight:600">${lOrders.length} orders extracted successfully${dupGroups.length>0?' • <span style="color:#dc2626">⚠️ '+dupGroups.length+' duplicate groups found!</span>':''}</div></div></div>`;
+}
+function lRT(dupIdxs=new Set()){
+  const sorted=[...lOrders].map((r,i)=>({...r,_oi:i})).sort((a,b)=>a.sku.localeCompare(b.sku));
+  const b1=document.querySelector('#ltb1 tbody');b1.innerHTML='';
+  sorted.forEach(r=>{
+    const tr=document.createElement('tr');
+    const c=r.courier.toLowerCase().replace(/\s/g,'');
+    const isDup=dupIdxs.has(r._oi);
+    if(isDup)tr.style.cssText='background:#fff1f1;outline:2px solid #fca5a5;outline-offset:-2px;';
+    const multiBadge=r.qty>1?`<span style="background:#dc2626;color:#fff;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:800;margin-left:6px">${r.qty}x MULTI</span>`:'';
+    const dupBadge=isDup?`<span style="background:#f97316;color:#fff;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:800;margin-left:4px">⚠️ DUP</span>`:'';
+    tr.innerHTML=`<td>${r.sku}${dupBadge}</td><td><span class="qb">${r.qty}</span>${multiBadge}</td><td><span class="pill ${c}">${r.courier}</span></td>`;
+    b1.appendChild(tr);
+  });
+  document.getElementById('lc1').textContent=sorted.length+' rows';
+  const sm={};lOrders.forEach(r=>{sm[r.sku]=(sm[r.sku]||0)+r.qty;});const b2=document.querySelector('#ltb2 tbody');b2.innerHTML='';Object.entries(sm).sort((a,b)=>b[1]-a[1]).forEach(([s,q])=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${s}</td><td><span class="qb">${q}</span></td>`;b2.appendChild(tr);});document.getElementById('lc2').textContent=Object.keys(sm).length+' SKUs';
+  const cw={};lOrders.forEach(r=>{const k=r.courier+'||'+r.sku;cw[k]=(cw[k]||0)+r.qty;});const b3=document.querySelector('#ltb3 tbody');b3.innerHTML='';Object.entries(cw).map(([k,q])=>{const[c,s]=k.split('||');return{c,s,q};}).sort((a,b)=>a.c.localeCompare(b.c)||b.q-a.q).forEach(r=>{const tr=document.createElement('tr');const cl=r.c.toLowerCase().replace(/\s/g,'');tr.innerHTML=`<td><span class="pill ${cl}">${r.c}</span></td><td>${r.s}</td><td><span class="qb">${r.q}</span></td>`;b3.appendChild(tr);});document.getElementById('lc3').textContent=Object.keys(cw).length+' rows';
+  const cs={};lOrders.forEach(r=>{cs[r.courier]=(cs[r.courier]||0)+r.qty;});const gd=lOrders.reduce((s,r)=>s+r.qty,0);const b4=document.querySelector('#ltb4 tbody');b4.innerHTML='';Object.entries(cs).sort((a,b)=>b[1]-a[1]).forEach(([c,q])=>{const tr=document.createElement('tr');const cl=c.toLowerCase().replace(/\s/g,'');tr.innerHTML=`<td><span class="pill ${cl}">${c}</span></td><td><span class="qb">${q}</span></td>`;b4.appendChild(tr);});const gt=document.createElement('tr');gt.className='grand-total';gt.innerHTML=`<td>GRAND TOTAL</td><td>${gd}</td>`;b4.appendChild(gt);document.getElementById('lc4').textContent=Object.keys(cs).length+' couriers';
+}
+function lRD(dupGroups){
+  const b5=document.querySelector('#ltb5 tbody');b5.innerHTML='';
+  let totalRows=0;
+  const colors=['#fee2e2','#fef9c3','#dcfce7','#dbeafe','#fae8ff'];
+  dupGroups.forEach((grp,gi)=>{
+    const bgColor=colors[gi%colors.length];
+    grp.forEach((r)=>{
+      const tr=document.createElement('tr');
+      tr.style.background=bgColor;
+      const c=r.courier.toLowerCase().replace(/\s/g,'');
+      // Show shortened address (first 40 chars)
+      const addrShort=(r.fullAddress||'').replace(/\s+/g,' ').trim().substring(0,45)||(r.pincode?'PIN: '+r.pincode:'—');
+      tr.innerHTML=`<td style="font-weight:800;color:#dc2626">G${gi+1}</td><td style="font-weight:700">${r.name||'—'}</td><td style="font-family:'Fira Code',monospace">${r.pincode||'—'}</td><td style="font-size:11px;color:#374151;max-width:160px">${addrShort}</td><td>${r.sku}</td><td><span class="pill ${c}">${r.courier}</span></td>`;
+      b5.appendChild(tr);totalRows++;
+    });
+    const sep=document.createElement('tr');sep.innerHTML='<td colspan="6" style="height:4px;background:#e5e7eb"></td>';b5.appendChild(sep);
+  });
+  document.getElementById('lc5').textContent=totalRows+' orders ('+dupGroups.length+' groups)';
+}
+function lRS(){
+  const sg=document.getElementById('lSG');sg.innerHTML='';const cp={};lSPages.forEach(p=>{if(p.courier!=='Unknown')cp[p.courier]=(cp[p.courier]||0)+1;});let cur=null,num=1;const ic={'Valmo':'🟠','Delhivery':'🔵','Xpress Bees':'🟣','Unknown':'⚪'};
+  lSPages.forEach(p=>{if(p.courier!==cur){cur=p.courier;const cl=cur.toLowerCase().replace(/\s/g,'');const h=document.createElement('div');h.className=`sgh ${cl}`;h.innerHTML=`<span>${ic[cur]||'📦'} ${cur}</span><span>${cp[cur]||0} labels</span>`;sg.appendChild(h);}const row=document.createElement('div');row.className='sgr';row.innerHTML=`<span class="sgn">#${String(num).padStart(3,'0')}</span><span class="sgsk">${p.sku||'(no SKU)'}</span><span class="qb">${p.qty||0}</span>`;sg.appendChild(row);num++;});
+  document.getElementById('lcS').textContent=lSPages.length+' pages';
+}
+function lDlXL(){
+  const wb=XLSX.utils.book_new();
+  const sortedOrders=[...lOrders].sort((a,b)=>a.sku.localeCompare(b.sku));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['SKU','QUANTITY','COURIER'],...sortedOrders.map(r=>[r.sku,r.qty,r.courier])]),'FINAL_ORDERS');
+  const sm={};lOrders.forEach(r=>{sm[r.sku]=(sm[r.sku]||0)+r.qty;});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['SKU','TOTAL QUANTITY'],...Object.entries(sm).sort((a,b)=>b[1]-a[1])]),'SKU_WISE');
+  const cw={};lOrders.forEach(r=>{const k=r.courier+'||'+r.sku;cw[k]=(cw[k]||0)+r.qty;});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['COURIER','SKU','TOTAL QUANTITY'],...Object.entries(cw).map(([k,q])=>{const[c,s]=k.split('||');return[c,s,q];}).sort((a,b)=>a[0].localeCompare(b[0])||b[2]-a[2])]),'COURIER_WISE');
+  const cs={};lOrders.forEach(r=>{cs[r.courier]=(cs[r.courier]||0)+r.qty;});const g=lOrders.reduce((s,r)=>s+r.qty,0);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['COURIER','TOTAL QUANTITY'],...Object.entries(cs).sort((a,b)=>b[1]-a[1]),['GRAND TOTAL',g]]),'COURIER_SUMMARY');
+  XLSX.writeFile(wb,'FINAL_ORDERS_OUTPUT.xlsx');
+}
+function lTab(id,btn){document.querySelectorAll('#labelView .tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('#labelView .tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');}
+function lFt(tbId,q,ctId){const rows=document.querySelectorAll(`#${tbId} tbody tr`);let v=0;rows.forEach(r=>{const s=!q||r.textContent.toLowerCase().includes(q.toLowerCase());r.style.display=s?'':'none';if(s)v++;});document.getElementById(ctId).textContent=v+' rows';}
+function lSP(d,t){document.getElementById('lPB').style.width=(t>0?Math.round(d/t*100):0)+'%';document.getElementById('lPP').textContent=d+'/'+t;}
+function lLog(elId,m){const el=document.getElementById(elId);if(el){el.innerHTML+=m+'<br>';el.scrollTop=el.scrollHeight;}}
+function lSE(m){document.getElementById('lErr').textContent=m;document.getElementById('lErr').classList.add('show');}
+function lCE(){document.getElementById('lErr').classList.remove('show');}
+function lReset(){lOrders=[];lSPages=[];lRaw=null;['lAll','ldV','ldD','ldX'].forEach(id=>{const a=document.getElementById(id);a.style.display='none';if(a.href&&a.href.startsWith('blob:'))URL.revokeObjectURL(a.href);a.href='';});document.getElementById('lF').value='';document.getElementById('lMR').style.display='none';document.getElementById('lST').classList.remove('show');document.getElementById('lBtn').classList.remove('show');document.getElementById('lBtn').disabled=false;document.getElementById('lProg').classList.remove('show');document.getElementById('lRes').style.display='none';document.getElementById('lPLog').innerHTML='';document.getElementById('lPB').style.width='0%';document.getElementById('lSk').classList.remove('show');lCE();document.getElementById('lUT').textContent='Label PDF Upload Karo';document.getElementById('lUS').textContent='Meesho / Flipkart / Amazon / Shopsy — auto detect hoga';document.getElementById('lPlatformBadge').style.display='none';if(document.getElementById('ltDupBtn'))document.getElementById('ltDupBtn').style.display='none';lPlatform='unknown';lSM('excel');lSPT('all');}
+
+// ══════════════════════════════════════════════════════════
+// PWA — Manifest + Service Worker + Offline Indicator
+// ══════════════════════════════════════════════════════════
+(function initPWA(){
+  // Inline Manifest
+  const manifest={
+    name:'Seller Pro',
+    short_name:'Seller Pro',
+    description:'Labels sort, SKU extract, Excel report for Meesho/Flipkart/Amazon',
+    start_url:'.',
+    display:'standalone',
+    background_color:'#f0f2f8',
+    theme_color:'#667eea',
+    icons:[{src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23667eea"/><text y=".9em" font-size="80" x="10">📦</text></svg>',sizes:'any',type:'image/svg+xml'}]
+  };
+  const mBlob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  const mEl=document.getElementById('pwaManifest');
+  if(mEl)mEl.href=URL.createObjectURL(mBlob);
+
+  // Service Worker — caches CDN libs for offline use
+  if('serviceWorker' in navigator){
+    const swCode=`
+const CACHE='seller-pro-v1';
+const PRECACHE=[
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'
+];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(PRECACHE).catch(()=>{})));self.skipWaiting();});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
+self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{if(res.ok&&e.request.url.includes('cdnjs')){const cl=res.clone();caches.open(CACHE).then(c=>c.put(e.request,cl));}return res;}).catch(()=>caches.match(e.request))));});`;
+    try{const swBlob=new Blob([swCode],{type:'application/javascript'});navigator.serviceWorker.register(URL.createObjectURL(swBlob),{scope:'./'}).catch(()=>{});}catch(e){}
+  }
+
+  // Offline bar
+  const bar=document.createElement('div');
+  bar.style.cssText='display:none;position:fixed;bottom:0;left:0;right:0;background:#1f2937;color:#fbbf24;text-align:center;padding:10px;font-size:13px;font-weight:800;z-index:9999;font-family:Nunito,sans-serif;letter-spacing:.5px';
+  bar.innerHTML='⚡ Offline Mode — CDN libraries cache se load ho rahe hain. PDF processing kaam karega!';
+  document.body.appendChild(bar);
+  const upd=()=>{bar.style.display=navigator.onLine?'none':'block';};
+  window.addEventListener('online',upd);window.addEventListener('offline',upd);upd();
+})();
+
+// ══════════════════════════════════════════════════════════
+// MERGE
+// ══════════════════════════════════════════════════════════
+let mFiles=[];
+document.getElementById('mF').addEventListener('change',e=>mAdd(e.target.files));
+function mAdd(files){for(const f of files)if(f.type==='application/pdf')mFiles.push(f);mRL();}
+function mRL(){
+  const fl=document.getElementById('mFL');fl.innerHTML='';
+  document.getElementById('mBtn').style.display=mFiles.length>=2?'block':'none';
+  mFiles.forEach((f,i)=>{
+    const div=document.createElement('div');div.className='fi';div.draggable=true;
+    div.innerHTML=`<span class="fi-ord">${i+1}</span><span style="font-size:22px">📄</span><span class="fi-nm">${f.name}</span><span class="fi-sz">${(f.size/1024).toFixed(0)}KB</span><button class="fi-rm" onclick="mRm(${i})">×</button>`;
+    div.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',i);div.classList.add('dragging');});
+    div.addEventListener('dragend',()=>div.classList.remove('dragging'));
+    div.addEventListener('dragover',e=>e.preventDefault());
+    div.addEventListener('drop',e=>{e.preventDefault();const fr=parseInt(e.dataTransfer.getData('text/plain'));if(fr===i)return;const tmp=mFiles[fr];mFiles.splice(fr,1);mFiles.splice(i,0,tmp);mRL();});
+    fl.appendChild(div);
+  });
+}
+function mRm(i){mFiles.splice(i,1);mRL();}
+async function mProcess(){
+  if(!PDFDoc){document.getElementById('mErr').textContent='❌ pdf-lib load nahi hua!';document.getElementById('mErr').classList.add('show');return;}
+  if(mFiles.length<2){document.getElementById('mErr').textContent='❌ Kam se kam 2 PDFs!';document.getElementById('mErr').classList.add('show');return;}
+  document.getElementById('mErr').classList.remove('show');document.getElementById('mProg').classList.add('show');document.getElementById('mRes').style.display='none';document.getElementById('mBtn').disabled=true;
+  const merged=await PDFDoc.create();let tp=0;
+  for(let i=0;i<mFiles.length;i++){
+    document.getElementById('mPL').textContent='📄 '+(i+1)+'/'+mFiles.length+' — '+mFiles[i].name;document.getElementById('mPB').style.width=Math.round((i/mFiles.length)*90)+'%';
+    const bytes=await mFiles[i].arrayBuffer();const src=await PDFDoc.load(bytes);const pages=await merged.copyPages(src,src.getPageIndices());pages.forEach(p=>merged.addPage(p));tp+=src.getPageCount();
+    lLog('mPLog','✅ '+mFiles[i].name);
+  }
+  document.getElementById('mPB').style.width='100%';
+  const out=await merged.save();const blob=new Blob([out],{type:'application/pdf'});const a=document.getElementById('mDl');if(a.href&&a.href.startsWith('blob:'))URL.revokeObjectURL(a.href);a.href=URL.createObjectURL(blob);a.style.display='flex';
+  document.getElementById('msF').textContent=mFiles.length;document.getElementById('msP').textContent=tp;document.getElementById('msS').textContent=(out.byteLength/1024).toFixed(0)+'KB';
+  document.getElementById('mProg').classList.remove('show');document.getElementById('mRes').style.display='block';document.getElementById('mBtn').disabled=false;
+}
+function mReset(){mFiles=[];mRL();document.getElementById('mF').value='';const a=document.getElementById('mDl');a.style.display='none';if(a.href&&a.href.startsWith('blob:'))URL.revokeObjectURL(a.href);a.href='';document.getElementById('mProg').classList.remove('show');document.getElementById('mRes').style.display='none';document.getElementById('mPLog').innerHTML='';document.getElementById('mPB').style.width='0%';document.getElementById('mErr').classList.remove('show');}
+
+// ══════════════════════════════════════════════════════════
+// CROP PDF
+// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+// CROP PDF — Complete Rewrite
+// ══════════════════════════════════════════════════════════
+let cPdf=null, cRaw=null, cPage=1, cTotal=1, cSc=1, cPageW=0, cPageH=0;
+let cDrag=false, cStart={x:0,y:0}, cSel={x:0,y:0,w:0,h:0};
+let cTask=null;
+
+// File input
+document.getElementById('cF').addEventListener('change',e=>{
+  if(e.target.files[0])cLoad(e.target.files[0]);
+});
+document.getElementById('cZ').addEventListener('click',()=>document.getElementById('cF').click());
+document.addEventListener('dragover',e=>{e.preventDefault();});
+document.addEventListener('drop',e=>{
+  e.preventDefault();
+  const f=[...e.dataTransfer.files].find(f=>f.type==='application/pdf');
+  if(f&&document.getElementById('cropView').classList.contains('active'))cLoad(f);
+});
+
+async function cLoad(file){
+  document.getElementById('cErr').classList.remove('show');
+  document.getElementById('cZ').style.display='none';
+  document.getElementById('cWorkspace').style.display='block';
+  document.getElementById('cFname').textContent=file.name;
+  document.getElementById('cUT').textContent='✅ '+file.name;
+  cRaw=await file.arrayBuffer();
+  cPdf=await pdfjsLib.getDocument({data:new Uint8Array(cRaw)}).promise;
+  cTotal=cPdf.numPages; cPage=1;
+  cSel={x:0,y:0,w:0,h:0};
+  cClearFields();
+  await cRender();
+  cSetupEvents();
+}
+
+async function cRender(){
+  if(!cPdf)return;
+  if(cTask){try{cTask.cancel();}catch(e){} cTask=null;}
+  const pg=await cPdf.getPage(cPage);
+  const vp0=pg.getViewport({scale:1});
+  cPageW=vp0.width; cPageH=vp0.height;
+  const stageW=Math.min(window.innerWidth-48, 800);
+  cSc=stageW/cPageW;
+  const vp=pg.getViewport({scale:cSc});
+  // Fresh canvas every render
+  const stage=document.getElementById('cStage');
+  let canvas=document.getElementById('cCanvas');
+  canvas.width=Math.round(vp.width);
+  canvas.height=Math.round(vp.height);
+  // Fill white before render so it's never black
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  try{
+    cTask=pg.render({canvasContext:ctx,viewport:vp});
+    await cTask.promise;
+    cTask=null;
+  }catch(e){if(e?.name!=='RenderingCancelledException')console.warn(e);}
+  document.getElementById('cPI').textContent=cPage+'/'+cTotal;
+  cDrawSel();
+}
+
+function cSetupEvents(){
+  const stage=document.getElementById('cStage');
+  // Clone to remove old listeners
+  const ns=stage.cloneNode(true);
+  stage.parentNode.replaceChild(ns,stage);
+  const st=document.getElementById('cStage');
+
+  function pos(cx,cy){
+    const r=st.getBoundingClientRect();
+    return{
+      x:Math.max(0,Math.min((cx-r.left)/r.width*document.getElementById('cCanvas').width, document.getElementById('cCanvas').width)),
+      y:Math.max(0,Math.min((cy-r.top)/r.height*document.getElementById('cCanvas').height, document.getElementById('cCanvas').height))
+    };
+  }
+
+  // Mouse
+  st.addEventListener('mousedown',e=>{
+    const p=pos(e.clientX,e.clientY);
+    cStart=p; cSel={x:p.x,y:p.y,w:0,h:0}; cDrag=true;
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!cDrag)return;
+    const p=pos(e.clientX,e.clientY);
+    cSel={x:Math.min(cStart.x,p.x),y:Math.min(cStart.y,p.y),w:Math.abs(p.x-cStart.x),h:Math.abs(p.y-cStart.y)};
+    cDrawSel(); cUpdateFields();
+  });
+  window.addEventListener('mouseup',()=>{cDrag=false;});
+
+  // Touch
+  let tId=null;
+  st.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    const t=e.touches[0];
+    const p=pos(t.clientX,t.clientY);
+    cStart=p; cSel={x:p.x,y:p.y,w:0,h:0}; cDrag=true; tId=t.identifier;
+  },{passive:false});
+  st.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(!cDrag)return;
+    const t=[...e.touches].find(x=>x.identifier===tId)||e.touches[0];
+    const p=pos(t.clientX,t.clientY);
+    const dx=p.x-cStart.x, dy=p.y-cStart.y;
+    if(Math.abs(dx)>4||Math.abs(dy)>4){
+      cSel={x:Math.min(cStart.x,p.x),y:Math.min(cStart.y,p.y),w:Math.abs(dx),h:Math.abs(dy)};
+      cDrawSel(); cUpdateFields();
+    }
+  },{passive:false});
+  st.addEventListener('touchend',()=>{cDrag=false;});
+}
+
+function cDrawSel(){
+  const sel=document.getElementById('cSel');
+  const dims=document.getElementById('cDims');
+  const canvas=document.getElementById('cCanvas');
+  if(cSel.w<8||cSel.h<8){sel.style.display='none';dims.style.display='none';return;}
+  // Convert canvas px → CSS px
+  const r=canvas.getBoundingClientRect();
+  const sx=r.width/canvas.width, sy=r.height/canvas.height;
+  sel.style.display='block';
+  sel.style.left=Math.round(cSel.x*sx)+'px';
+  sel.style.top=Math.round(cSel.y*sy)+'px';
+  sel.style.width=Math.round(cSel.w*sx)+'px';
+  sel.style.height=Math.round(cSel.h*sy)+'px';
+  const pw=Math.round(cSel.w/cSc), ph=Math.round(cSel.h/cSc);
+  dims.style.display='block';
+  dims.textContent=pw+' × '+ph+' pts';
+}
+
+function cUpdateFields(){
+  const canvas=document.getElementById('cCanvas');
+  const t=Math.max(0,Math.round(cSel.y/cSc));
+  const l=Math.max(0,Math.round(cSel.x/cSc));
+  const b=Math.max(0,Math.round((canvas.height-cSel.y-cSel.h)/cSc));
+  const r2=Math.max(0,Math.round((canvas.width-cSel.x-cSel.w)/cSc));
+  document.getElementById('cTop').value=t;
+  document.getElementById('cBot').value=b;
+  document.getElementById('cLft').value=l;
+  document.getElementById('cRgt').value=r2;
+}
+
+function cUpdateFromFields(){
+  if(!cPdf)return;
+  const canvas=document.getElementById('cCanvas');
+  const t=+document.getElementById('cTop').value||0;
+  const b=+document.getElementById('cBot').value||0;
+  const l=+document.getElementById('cLft').value||0;
+  const r2=+document.getElementById('cRgt').value||0;
+  cSel={
+    x:l*cSc, y:t*cSc,
+    w:canvas.width-(l+r2)*cSc,
+    h:canvas.height-(t+b)*cSc
+  };
+  if(cSel.w>0&&cSel.h>0)cDrawSel();
+}
+
+function cClearFields(){
+  ['cTop','cBot','cLft','cRgt'].forEach(id=>document.getElementById(id).value=0);
+  cSel={x:0,y:0,w:0,h:0};
+  document.getElementById('cSel').style.display='none';
+  document.getElementById('cDims').style.display='none';
+}
+
+function cPreset(p){
+  if(!cPdf)return;
+  const W=cPageW, H=cPageH;
+  const m={'top':{t:0,b:Math.round(H/2),l:0,r:0},'bottom':{t:Math.round(H/2),b:0,l:0,r:0},'left':{t:0,b:0,l:0,r:Math.round(W/2)},'right':{t:0,b:0,l:Math.round(W/2),r:0},'border':{t:10,b:10,l:10,r:10},'reset':{t:0,b:0,l:0,r:0}};
+  const v=m[p];if(!v)return;
+  document.getElementById('cTop').value=v.t;
+  document.getElementById('cBot').value=v.b;
+  document.getElementById('cLft').value=v.l;
+  document.getElementById('cRgt').value=v.r;
+  cUpdateFromFields();
+}
+
+function cPrev(){if(cPage>1){cPage--;cSel={x:0,y:0,w:0,h:0};cClearFields();cRender();}}
+function cNext(){if(cPage<cTotal){cPage++;cSel={x:0,y:0,w:0,h:0};cClearFields();cRender();}}
+
+async function cProcess(){
+  if(!cRaw||!PDFDoc){
+    document.getElementById('cErr').textContent='❌ PDF upload karo pehle!';
+    document.getElementById('cErr').classList.add('show');return;
+  }
+  document.getElementById('cErr').classList.remove('show');
+  document.getElementById('cProg').classList.add('show');
+  document.getElementById('cRes').style.display='none';
+  const top=+document.getElementById('cTop').value||0;
+  const bot=+document.getElementById('cBot').value||0;
+  const lft=+document.getElementById('cLft').value||0;
+  const rgt=+document.getElementById('cRgt').value||0;
+  const applyAll=document.getElementById('cApplyTog').classList.contains('on');
+  document.getElementById('cPL').textContent='✂️ Cropping...';
+  document.getElementById('cPB').style.width='30%';
+  try{
+    const src=await PDFDoc.load(cRaw);
+    src.getPages().forEach((pg,i)=>{
+      if(applyAll||(i+1)===cPage){
+        const{width:w,height:h}=pg.getSize();
+        pg.setCropBox(lft, bot, Math.max(1,w-lft-rgt), Math.max(1,h-top-bot));
+      }
+    });
+    document.getElementById('cPB').style.width='80%';
+    const out=await src.save();
+    const blob=new Blob([out],{type:'application/pdf'});
+    const a=document.getElementById('cDl');
+    if(a.href&&a.href.startsWith('blob:'))URL.revokeObjectURL(a.href);
+    a.href=URL.createObjectURL(blob); a.style.display='flex';
+    document.getElementById('csP').textContent=applyAll?cTotal:1;
+    document.getElementById('csS').textContent=(out.byteLength/1024).toFixed(0)+'KB';
+    document.getElementById('cPB').style.width='100%';
+  }catch(e){
+    document.getElementById('cErr').textContent='❌ Error: '+e.message;
+    document.getElementById('cErr').classList.add('show');
+  }
+  document.getElementById('cProg').classList.remove('show');
+  document.getElementById('cRes').style.display='block';
+}
+
+function cReset(){
+  if(cTask){try{cTask.cancel();}catch(e){}}
+  cPdf=null; cRaw=null; cPage=1; cTotal=1;
+  document.getElementById('cF').value='';
+  document.getElementById('cZ').style.display='';
+  document.getElementById('cWorkspace').style.display='none';
+  document.getElementById('cUT').textContent='PDF Upload Karo';
+  document.getElementById('cSel').style.display='none';
+  document.getElementById('cDims').style.display='none';
+  const a=document.getElementById('cDl');
+  a.style.display='none';
+  if(a.href&&a.href.startsWith('blob:'))URL.revokeObjectURL(a.href);
+  a.href='';
+  document.getElementById('cProg').classList.remove('show');
+  document.getElementById('cRes').style.display='none';
+  document.getElementById('cPLog').innerHTML='';
+  document.getElementById('cPB').style.width='0%';
+  document.getElementById('cErr').classList.remove('show');
+  cClearFields();
+}
+
+// ══════════════════════════════════════════════════════════
+// SPLIT PDF
+// ══════════════════════════════════════════════════════════
+let skRaw=null,skData=[];
+document.getElementById('skF').addEventListener('change',e=>{if(e.target.files[0])skLoad(e.target.files[0]);});
+async function skLoad(file){
+  if(!file||file.type!=='application/pdf'){document.getElementById('skErr').textContent='❌ Sirf PDF!';document.getElementById('skErr').classList.add('show');return;}
+  document.getElementById('skErr').classList.remove('show');
+  const r=new FileReader();r.onload=async ev=>{
+    skRaw=new Uint8Array(ev.target.result);
+    const pdf=await pdfjsLib.getDocument({data:skRaw.slice()}).promise;
+    document.getElementById('skUT').textContent='✅ '+file.name+' ('+pdf.numPages+' pages)';
+    document.getElementById('skConf').style.display='block';document.getElementById('skBtn').classList.add('show');
+  };r.readAsArrayBuffer(file);
+}
+
+async function skProcess(){
+  if(!skRaw)return;skData=[];document.getElementById('skErr').classList.remove('show');
+  document.getElementById('skProg').classList.add('show');document.getElementById('skRes').style.display='none';document.getElementById('skBtn').disabled=true;
+  const headerKw=document.getElementById('skHeader').value||'SKU';
+  const prefixRe=document.getElementById('skPrefix').value;
+  let prefixRegex=null;try{if(prefixRe)prefixRegex=new RegExp(prefixRe);}catch(e){}
+  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(skRaw)}).promise;
+  const total=pdf.numPages;
+  document.getElementById('skPL').textContent='🔍 Extracting SKUs...';
+
+  for(let i=1;i<=total;i++){
+    document.getElementById('skPB').style.width=Math.round(i/total*100)+'%';document.getElementById('skPP').textContent=i+'/'+total;
+    const pg=await pdf.getPage(i);const ct=await pg.getTextContent();const lines=mkLines(ct);
+    const txt=lines.join('\n');
+    let found=false;
+
+    // ── METHOD 1: Flipkart / Shopsy / Meesho ──
+    // Header "SKU ID | Description" ke baad pipe se pehle SKU hota hai
+    // e.g. "1 DI-LEO-1000W_PURPLE | Description ... 1"
+    let hi=-1;
+    for(let j=0;j<lines.length;j++){
+      if(lines[j].toUpperCase().includes(headerKw.toUpperCase())){hi=j;break;}
+    }
+    if(hi!==-1){
+      for(let off=1;off<=4;off++){
+        const rl=lines[hi+off];if(!rl)continue;
+        // Row starts with digit then SKU before pipe
+        const pipeMatch=rl.trim().match(/^\d+\s+([A-Z0-9][^\s|]{2,})/i);
+        let sku=pipeMatch?pipeMatch[1].split('|')[0].trim():null;
+        if(!sku){
+          // fallback: first non-numeric token
+          const t=rl.trim().split(/\s+/);
+          sku=t.find(tok=>/[A-Za-z]/.test(tok)&&tok.length>2)||null;
+        }
+        if(!sku||sku.length<3)continue;
+        if(prefixRegex)sku=sku.replace(prefixRegex,'');
+        const allToks=rl.trim().split(/\s+/);
+        let qty=1;
+        for(let ti=allToks.length-1;ti>=0;ti--){const n=parseInt(allToks[ti]);if(!isNaN(n)&&n>0&&n<1000){qty=n;break;}}
+        const extra='Flipkart/Shopsy';
+        skData.push({page:i,sku,qty,extra});found=true;break;
+      }
+    }
+
+    // ── METHOD 2: Amazon Invoice ──
+    // SKU parentheses ke andar hota hai: ASIN ( SKU-CODE )
+    // e.g. "B0CX5H6BKM ( IC-IR-FIBERTECH-2000W )" ya "B0GSKHV1DS ( CT-AERA-X13 )"
+    // SKU pattern: uppercase letters/digits with at least one hyphen/underscore
+    if(!found){
+      const skuPat=/\(\s*([A-Z][A-Z0-9_]{1,}-[A-Z0-9_-]{2,})\s*\)/g;
+      const matches=[...txt.matchAll(skuPat)];
+      if(matches.length>0){
+        for(const m of matches){
+          let sku=m[1];
+          if(prefixRegex)sku=sku.replace(prefixRegex,'');
+          // Qty dhundo — standalone numeric line ya Qty column ke baad
+          let qty=1;
+          const qtyLineM=txt.match(/Qty\s*\n\s*(\d+)/i)||txt.match(/\|\s*(\d+)\s*\|/);
+          if(qtyLineM)qty=parseInt(qtyLineM[1]);
+          else{
+            // standalone number wali line
+            for(const ln of lines){
+              if(/^\d+$/.test(ln.trim())&&parseInt(ln.trim())>0&&parseInt(ln.trim())<1000){qty=parseInt(ln.trim());break;}
+            }
+          }
+          skData.push({page:i,sku,qty,extra:'Amazon'});found=true;
+        }
+      }
+    }
+
+    // ── METHOD 3: Raw SKU scan (fallback) ──
+    // Agar dono methods fail ho jayen — tab bhi try karo
+    // Pattern: UPPERCASE token with hyphens/underscores, min 5 chars
+    if(!found){
+      const rawPat=/\b([A-Z]{2,}[A-Z0-9_-]{3,}-[A-Z0-9_-]{2,})\b/g;
+      const rawMatches=[...txt.matchAll(rawPat)];
+      for(const m of rawMatches){
+        const sku=m[1];
+        // Filter out common non-SKU patterns
+        if(/^(IGST|CGST|SGST|GSTIN|HSN|PAN|AWB|COD|STD|SKU)/.test(sku))continue;
+        let qsku=sku;
+        if(prefixRegex)qsku=qsku.replace(prefixRegex,'');
+        skData.push({page:i,sku:qsku,qty:1,extra:'Auto-detect'});found=true;break;
+      }
+    }
+
+    if(i%20===0)await new Promise(r=>setTimeout(r,0));
+  }
+  skRender();document.getElementById('skBtn').disabled=false;
+}
+
+function skRender(){
+  document.getElementById('skProg').classList.remove('show');document.getElementById('skRes').style.display='block';
+  const tq=skData.reduce((s,r)=>s+r.qty,0),us=new Set(skData.map(r=>r.sku)).size;
+  document.getElementById('sksPg').textContent=document.getElementById('skPP').textContent.split('/')[1]||'0';
+  document.getElementById('sksS').textContent=skData.length;document.getElementById('sksQ').textContent=tq;document.getElementById('sksU').textContent=us;
+  const tb=document.querySelector('#sktb tbody');tb.innerHTML='';
+  skData.forEach(r=>{
+    const srcColor={'Flipkart/Shopsy':'#eff6ff;color:#1d4ed8','Amazon':'#fff7ed;color:#c2410c','Auto-detect':'#faf5ff;color:#7c3aed'}[r.extra]||'#f9fafb;color:#374151';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="color:#6b7280;font-family:'Fira Code',monospace">${r.page}</td><td style="font-family:'Fira Code',monospace;font-weight:800;color:#5b21b6">${r.sku}</td><td><span class="qb">${r.qty}</span></td><td><span style="background:${srcColor};border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">${r.extra}</span></td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('skct').textContent=skData.length+' rows';
+}
+function skDlXL(){
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['PAGE','SKU','QTY','SOURCE'],...skData.map(r=>[r.page,r.sku,r.qty,r.extra])]),'RAW_DATA');
+  const sm={};skData.forEach(r=>{sm[r.sku]=(sm[r.sku]||0)+r.qty;});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['SKU','TOTAL QTY'],...Object.entries(sm).sort((a,b)=>b[1]-a[1])]),'SKU_WISE');
+  XLSX.writeFile(wb,'SKU_EXTRACTED.xlsx');
+}
+function skReset(){skRaw=null;skData=[];document.getElementById('skF').value='';document.getElementById('skConf').style.display='none';document.getElementById('skBtn').classList.remove('show');document.getElementById('skBtn').disabled=false;document.getElementById('skProg').classList.remove('show');document.getElementById('skRes').style.display='none';document.getElementById('skPLog').innerHTML='';document.getElementById('skPB').style.width='0%';document.getElementById('sktb tbody').innerHTML='';document.getElementById('skErr').classList.remove('show');document.getElementById('skUT').textContent='PDF Upload Karo';}
+
+// ══════════════════════════════════════════════════════════
+// RTO TRACKER
+// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+// SMART RTO MANAGEMENT SYSTEM
+// IndexedDB Memory + Barcode Scanner + Smart Matching
+// ══════════════════════════════════════════════════════════
+
+let rtoData=[];
+let rtoDispatch=[];    // [{orderId, packetId, sku, awb?}] from Excel
+let rtoPdfRaw=null;
+let rtoScanStream=null;
+let rtoScanInterval=null;
+let rtoDetector=null;
+
+// ── IndexedDB Setup ────────────────────────────────────────
+const IDB_NAME='RTOMemory', IDB_STORE='mappings', IDB_VER=1;
+let rtoDb=null;
+const SIXTY_DAYS=60*24*60*60*1000; // 60 din tak rakho, 61ve din delete
+
+function rtoOpenDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(IDB_NAME,IDB_VER);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains(IDB_STORE)){
+        const store=db.createObjectStore(IDB_STORE,{keyPath:'awb'});
+        store.createIndex('ts','ts',{unique:false});
+        store.createIndex('orderId','orderId',{unique:false});
+      }
+    };
+    req.onsuccess=e=>{rtoDb=e.target.result;res(rtoDb);};
+    req.onerror=()=>rej(req.error);
+  });
+}
+
+async function rtoSaveMapping(entries){
+  // entries = [{awb, orderId, sku, courier, ts}]
+  if(!rtoDb)await rtoOpenDB();
+  return new Promise(res=>{
+    const tx=rtoDb.transaction(IDB_STORE,'readwrite');
+    const store=tx.objectStore(IDB_STORE);
+    let saved=0;
+    // store.add() throws if key already exists — duplicate skip ho jaata hai
+    // store.put() would overwrite timestamp — we don't want that
+    entries.forEach(e=>{
+      const req=store.add(e);
+      req.onsuccess=()=>saved++;
+      req.onerror=()=>{}; // silently skip duplicate AWB
+    });
+    tx.oncomplete=()=>res(saved);
+    tx.onerror=()=>res(saved);
+  });
+}
+
+async function rtoCleanup60Days(){
+  if(!rtoDb)await rtoOpenDB();
+  return new Promise(res=>{
+    const cutoff=Date.now()-SIXTY_DAYS;
+    const tx=rtoDb.transaction(IDB_STORE,'readwrite');
+    const store=tx.objectStore(IDB_STORE);
+    const idx=store.index('ts');
+    const range=IDBKeyRange.upperBound(cutoff, true);
+    const req=idx.openCursor(range);
+    let deleted=0;
+    req.onsuccess=e=>{
+      const cursor=e.target.result;
+      if(cursor){cursor.delete();deleted++;cursor.continue();}
+    };
+    tx.oncomplete=()=>res(deleted);
+    tx.onerror=()=>res(0);
+  });
+}
+
+async function rtoGetByAWB(awb){
+  if(!rtoDb)await rtoOpenDB();
+  return new Promise(res=>{
+    const tx=rtoDb.transaction(IDB_STORE,'readonly');
+    const store=tx.objectStore(IDB_STORE);
+    const req=store.get(awb);
+    req.onsuccess=()=>res(req.result||null);
+    req.onerror=()=>res(null);
+  });
+}
+
+async function rtoGetByOrderId(orderId){
+  if(!rtoDb)await rtoOpenDB();
+  return new Promise(res=>{
+    const tx=rtoDb.transaction(IDB_STORE,'readonly');
+    const store=tx.objectStore(IDB_STORE);
+    const idx=store.index('orderId');
+    const req=idx.getAll(orderId);
+    req.onsuccess=()=>res(req.result||[]);
+    req.onerror=()=>res([]);
+  });
+}
+
+async function rtoCountAll(){
+  if(!rtoDb)await rtoOpenDB();
+  return new Promise(res=>{
+    const tx=rtoDb.transaction(IDB_STORE,'readonly');
+    const store=tx.objectStore(IDB_STORE);
+    const req=store.count();
+    req.onsuccess=()=>res(req.result);
+    req.onerror=()=>res(0);
+  });
+}
+
+async function rtoUpdateMemCount(){
+  const n=await rtoCountAll();
+  document.getElementById('rtoMemCount').textContent=n;
+  document.getElementById('rtoMemBadge').textContent='🧠 '+n+' saved';
+}
+
+// ── Auto-extract AWB + OrderId from label pages ────────────
+function extractAWBandOrderId(lines){
+  const txt=lines.join('\n');
+  // AWB: FMPC/FMPP/FMLM prefix numbers
+  let awb='';
+  const awbM=txt.match(/\b((?:FMPC|FMPP|FMLM|FMMO)\d{7,})\b/i);
+  if(awbM)awb=awbM[1];
+  else{
+    // Fallback: long numeric AWB (10-16 digits after AWB No.)
+    const awbNo=txt.match(/AWB\s*No[.\s:]*([A-Z0-9]{8,16})/i);
+    if(awbNo)awb=awbNo[1];
+  }
+  // Order ID: OD prefix
+  let orderId='';
+  const odM=txt.match(/\b(OD\d{12,})\b/i);
+  if(odM)orderId=odM[1];
+  else{
+    // Amazon-style order ID
+    const amzM=txt.match(/\b(\d{3}-\d{7}-\d{7})\b/);
+    if(amzM)orderId=amzM[1];
+    // Meesho-style
+    const msM=txt.match(/Order\s*(?:ID|No)[.\s:]*([A-Z0-9\-]{8,})/i);
+    if(msM&&!orderId)orderId=msM[1];
+  }
+  return{awb,orderId};
+}
+
+// ── File listeners ─────────────────────────────────────────
+document.getElementById('rtoF1').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  rtoPdfRaw=null;
+  const r=new FileReader();r.onload=ev=>{rtoPdfRaw=new Uint8Array(ev.target.result);};r.readAsArrayBuffer(f);
+  document.getElementById('rtoF1Name').textContent='✅ '+f.name;
+  document.getElementById('rtoUz1').classList.add('has-file');
+});
+
+document.getElementById('rtoF2').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  rtoDispatch=[];
+  const r=new FileReader();
+  r.onload=async ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(rows.length>0){
+        const keys=Object.keys(rows[0]);
+        const findCol=hints=>keys.find(k=>hints.some(h=>k.toLowerCase().replace(/[\s_\-]/g,'').includes(h)))||null;
+        // Order ID column
+        const oIdCol=findCol(['orderid','orderno','ordernum','manifestid','packetorderid','order']);
+        // Packet ID column
+        const pkCol=findCol(['packetid','packetno','parcelid','shipmentid','bagid','manifestno','packet']);
+        // SKU column
+        const skuCol=findCol(['sku','itemcode','productcode','item','product']);
+        // AWB column — more hints
+        const awbCol=findCol(['awb','tracking','waybill','airwaybill','trackingno','trackingid','docketno','docket','shipment','consignment','lrno']);
+        rtoDispatch=rows.map(row=>({
+          orderId:String(row[oIdCol]||'').trim(),
+          packetId:String(row[pkCol]||'').trim(),
+          sku:String(row[skuCol]||'').trim(),
+          awb:awbCol?String(row[awbCol]||'').trim().replace(/\s+/g,''):''
+        })).filter(r=>r.orderId||r.packetId||r.awb);
+      }
+    }catch(e){rtoDispatch=[];}
+    document.getElementById('rtoF2Name').textContent='✅ '+f.name+' ('+rtoDispatch.length+' rows)';
+    document.getElementById('rtoUz2').classList.add('has-file');
+    // Update scanner status
+    const awbCount=rtoDispatch.filter(d=>d.awb).length;
+    const el=document.getElementById('rtoExcelStatus');
+    if(el)el.innerHTML=awbCount>0
+      ?`✅ <span style="color:#4ade80">${awbCount} AWB entries ready</span> — Scanner kaam karega!`
+      :`⚠️ <span style="color:#fbbf24">Excel mein AWB column nahi mila</span> — Column naam check karo (AWB / Tracking / Waybill)`;
+  };
+  r.readAsArrayBuffer(f);
+  document.getElementById('rtoF2Name').textContent='✅ '+f.name+' (loading...)';
+});
+
+// ── Main RTO Processing ────────────────────────────────────
+async function rtoProcess(){
+  if(!rtoPdfRaw){
+    document.getElementById('rtoErr').textContent='❌ RTO PDF upload karo!';
+    document.getElementById('rtoErr').classList.add('show');return;
+  }
+  document.getElementById('rtoErr').classList.remove('show');
+  document.getElementById('rtoProg').style.display='block';
+  document.getElementById('rtoRes').style.display='none';
+  document.getElementById('rtoPB').style.width='0%';
+  rtoData=[];
+
+  const pdf=await pdfjsLib.getDocument({data:rtoPdfRaw.slice()}).promise;
+  const total=pdf.numPages;
+
+  // Build orderID → dispatch map
+  const orderMap={};
+  rtoDispatch.forEach(d=>{if(d.orderId)orderMap[d.orderId.toUpperCase()]=d;});
+
+  for(let i=1;i<=total;i++){
+    document.getElementById('rtoPB').style.width=Math.round(i/total*100)+'%';
+    document.getElementById('rtoPP').textContent=i+'/'+total;
+    const pg=await pdf.getPage(i);
+    const ct=await pg.getTextContent();
+    const lines=mkLines(ct);
+    const txt=lines.join('\n');
+
+    const awbPat=/\b(\d{10,20})\b|\b([A-Z]{2,5}\d{8,16})\b/g;
+    let m;
+    while((m=awbPat.exec(txt))!==null){
+      const awb=(m[1]||m[2]).trim();
+      if(rtoData.find(r=>r.awb===awb))continue;
+
+      // Determine context for status
+      const ctx=txt.toLowerCase();
+      let status='Unknown';
+      if(ctx.includes('accept'))status='Accepted';
+      else if(ctx.includes('reject'))status='Rejected';
+      else if(ctx.includes('deliver'))status='Delivered';
+      else if(ctx.includes('return'))status='Returned';
+
+      let remark='—';
+      if(ctx.includes('barcode'))remark='Barcode Mismatch';
+      else if(ctx.includes('qr'))remark='QR Mismatch';
+      else if(ctx.includes('address'))remark='Address Not Found';
+      else if(ctx.includes('refus'))remark='Customer Refused';
+      else if(ctx.includes('damage'))remark='Damaged';
+      else if(ctx.includes('not deliver'))remark='Not Delivered';
+
+      // Smart match: AWB → IndexedDB → OrderID → Excel Dispatch
+      const memRecord=await rtoGetByAWB(awb);
+      let orderId=memRecord?.orderId||'';
+      let dispatchRecord=null;
+
+      if(orderId){
+        dispatchRecord=orderMap[orderId.toUpperCase()]||null;
+      }
+      // Fallback: try direct AWB match in dispatch
+      if(!dispatchRecord){
+        dispatchRecord=rtoDispatch.find(d=>d.awb===awb)||null;
+        if(dispatchRecord)orderId=dispatchRecord.orderId;
+      }
+
+      rtoData.push({
+        awb,status,remark,orderId,
+        packetId:dispatchRecord?.packetId||'',
+        sku:dispatchRecord?.sku||memRecord?.sku||''
+      });
+    }
+    if(i%10===0)await new Promise(r=>setTimeout(r,0));
+  }
+
+  document.getElementById('rtoProg').style.display='none';
+  rtoRender();
+}
+
+function rtoRender(){
+  const costFwd=parseFloat(document.getElementById('rtoCostFwd').value)||50;
+  const costRev=parseFloat(document.getElementById('rtoCostRev').value)||50;
+  const costPack=parseFloat(document.getElementById('rtoCostPack').value)||20;
+  const lossPerItem=costFwd+costRev+costPack;
+
+  const accepted=rtoData.filter(r=>['Accepted','Delivered','Returned'].includes(r.status));
+  const rejected=rtoData.filter(r=>r.status==='Rejected');
+  const totalLoss=rejected.length*lossPerItem;
+
+  document.getElementById('rtoTotal').textContent=rtoData.length;
+  document.getElementById('rtoAccepted').textContent=accepted.length;
+  document.getElementById('rtoRejected').textContent=rejected.length;
+  document.getElementById('rtoLoss').textContent='₹'+totalLoss.toLocaleString('en-IN');
+  document.getElementById('rtoRejBadge').textContent=rejected.length;
+
+  const alertBox=document.getElementById('rtoAlert');
+  if(rejected.length>0){
+    alertBox.classList.add('show');
+    document.getElementById('rtoAlertTitle').textContent=rejected.length+' Rejected — Courier Claim Raise Karo!';
+    document.getElementById('rtoAlertMsg').textContent='Barcode/QR mismatch ki wajah se reject hue. Turant courier ko claim bhejo.';
+  } else {alertBox.classList.remove('show');}
+
+  // Helper for row HTML
+  const rowHtml=(r,showPacket=false)=>{
+    const badge=`<span class="rto-badge ${r.status.toLowerCase()}">${r.status}</span>`;
+    const loss=`₹${lossPerItem}`;
+    const pk=r.packetId?`<b style="color:#15803d">${r.packetId}</b>`:`<span style="color:#9ca3af">—</span>`;
+    const oid=r.orderId?`<span style="font-size:11px;color:#60a5fa;font-family:'Fira Code',monospace">${r.orderId}</span>`:'—';
+    if(showPacket)
+      return `<td style="font-family:'Fira Code',monospace;font-weight:700;color:#dc2626">${r.awb}</td><td>${oid}</td><td>${pk}</td><td>${r.sku||'—'}</td><td>${r.remark}</td><td style="font-weight:800;color:#dc2626">${loss}</td>`;
+    return `<td style="font-family:'Fira Code',monospace;font-weight:700">${r.awb}</td><td>${badge}</td><td>${oid}</td><td>${r.packetId||'—'}</td><td style="font-size:12px">${r.remark}</td>`;
+  };
+
+  const fill=(tbId,rows,showPacket=false)=>{
+    const tb=document.querySelector('#'+tbId+' tbody');tb.innerHTML='';
+    rows.forEach(r=>{
+      const tr=document.createElement('tr');
+      const cls=r.status==='Rejected'?'rejected-row':['Accepted','Delivered','Returned'].includes(r.status)?'accepted-row':'';
+      if(cls)tr.className=cls;
+      tr.innerHTML=rowHtml(r,showPacket);
+      tb.appendChild(tr);
+    });
+  };
+
+  // All AWBs table — update header
+  document.querySelector('#rtoT1 thead tr').innerHTML='<th>AWB</th><th>Status</th><th>Order ID</th><th>Packet ID</th><th>Remark</th>';
+  fill('rtoT1',rtoData);
+  document.getElementById('rtoCt1').textContent=rtoData.length+' AWBs';
+
+  document.querySelector('#rtoT2 thead tr').innerHTML='<th>AWB</th><th>Order ID</th><th>Packet ID</th><th>SKU</th><th>Remark</th><th>Loss</th>';
+  fill('rtoT2',rejected,true);
+  document.getElementById('rtoCt2').textContent=rejected.length+' rejected';
+
+  document.querySelector('#rtoT3 thead tr').innerHTML='<th>AWB</th><th>Status</th><th>Order ID</th><th>Packet ID</th><th>Remark</th>';
+  fill('rtoT3',accepted);
+  document.getElementById('rtoCt3').textContent=accepted.length+' accepted';
+
+  const hasMatch=rtoDispatch.length>0||rtoData.some(r=>r.packetId||r.orderId);
+  document.getElementById('rtoMatchTab').style.display=hasMatch?'':'none';
+  if(hasMatch){
+    document.querySelector('#rtoT4 thead tr').innerHTML='<th>AWB</th><th>Order ID</th><th>Packet ID</th><th>SKU</th><th>Remark</th><th>Loss</th>';
+    fill('rtoT4',rejected,true);
+    document.getElementById('rtoCt4').textContent=rejected.length+' items';
+  }
+
+  const reasons={};rtoData.forEach(r=>{const k=r.remark||'—';reasons[k]=(reasons[k]||0)+1;});
+  const tb5=document.querySelector('#rtoT5 tbody');tb5.innerHTML='';
+  Object.entries(reasons).sort((a,b)=>b[1]-a[1]).forEach(([reason,count])=>{
+    const pct=((count/rtoData.length)*100).toFixed(1);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:700">${reason}</td><td><span class="qb">${count}</span></td><td style="font-family:'Fira Code',monospace;font-weight:700">${pct}%</td>`;
+    tb5.appendChild(tr);
+  });
+
+  document.getElementById('rtoRes').style.display='block';
+}
+
+// ── AWB Lookup (scanner result + manual) ─────────────────
+async function rtoLookupAWB(awb){
+  awb=String(awb||'').trim().replace(/\s+/g,'').toUpperCase();
+  if(!awb)return;
+  document.getElementById('rtoScanResult').style.display='block';
+  document.getElementById('rtoManualAwb').value=awb;
+
+  // Step 1: Try direct AWB match in Excel (fastest path — no DB needed)
+  let dispatchRecord=null;
+  if(rtoDispatch.length>0){
+    dispatchRecord=rtoDispatch.find(d=>d.awb.toUpperCase()===awb)||null;
+  }
+
+  // Step 2: If not found directly, check IndexedDB for AWB→OrderID link
+  let orderId=dispatchRecord?.orderId||'';
+  if(!dispatchRecord){
+    const mem=await rtoGetByAWB(awb);
+    orderId=mem?.orderId||'';
+    if(orderId&&rtoDispatch.length>0){
+      dispatchRecord=rtoDispatch.find(d=>d.orderId.toUpperCase()===orderId.toUpperCase())||null;
+    }
+  }
+
+  const grid=document.getElementById('rtoScanGrid');
+  const found=!!dispatchRecord;
+
+  const card=(label,value,color='#f0f0ff',bg='#1e293b',size='')=>
+    `<div style="background:${bg};border-radius:10px;padding:14px 16px;border:1px solid ${found&&label==='Packet ID'?'#4ade80':'#334155'}">
+      <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">${label}</div>
+      <div style="font-size:${size||(value.length>15?'14px':'22px')};font-weight:900;color:${color};font-family:'Fira Code',monospace;word-break:break-all;line-height:1.2">${value||'—'}</div>
+    </div>`;
+
+  const packetVal=dispatchRecord?.packetId||(rtoDispatch.length===0?'⚠️ Excel upload karo':'❌ AWB not found');
+  const packetColor=dispatchRecord?.packetId?'#4ade80':rtoDispatch.length===0?'#fbbf24':'#f87171';
+
+  grid.innerHTML=
+    card('AWB Number',awb,'#fbbf24')+
+    card('Packet ID',packetVal,packetColor,dispatchRecord?.packetId?'#0f2a1a':'#1e293b')+
+    card('Order ID',orderId||'—','#60a5fa')+
+    card('SKU',dispatchRecord?.sku||'—','#e2e8f0');
+
+  // Flash green if found, red if not
+  const sr=document.getElementById('rtoScanResult');
+  sr.style.borderColor=found?'#4ade80':'#f87171';
+  setTimeout(()=>{sr.style.borderColor='#f7971e';},800);
+
+  if(navigator.vibrate)navigator.vibrate(found?[100,50,100]:[200]);
+}
+
+// ── Barcode Scanner ────────────────────────────────────────
+async function rtoStartScan(){
+  // Try BarcodeDetector API (Chrome Android 83+)
+  if(!('BarcodeDetector' in window)){
+    alert('Aapka browser live scanner support nahi karta. Neeche manual input use karein.\n\n(Chrome 83+ on Android pe kaam karta hai)');
+    return;
+  }
+  try{
+    rtoDetector=new BarcodeDetector({formats:['code_128','code_39','ean_13','ean_8','qr_code','data_matrix','itf','upc_a','upc_e']});
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+    rtoScanStream=stream;
+    const video=document.getElementById('rtoVideo');
+    video.srcObject=stream;
+    document.getElementById('rtoScanArea').style.display='block';
+    document.getElementById('rtoBtnScan').style.display='none';
+    document.getElementById('rtoBtnStop').style.display='';
+
+    rtoScanInterval=setInterval(async()=>{
+      if(video.readyState!==4)return;
+      try{
+        const barcodes=await rtoDetector.detect(video);
+        if(barcodes.length>0){
+          const raw=barcodes[0].rawValue;
+          rtoStopScan();
+          await rtoLookupAWB(raw);
+          // Vibrate on success
+          if(navigator.vibrate)navigator.vibrate([100,50,100]);
+        }
+      }catch(e){}
+    },400);
+  }catch(e){
+    alert('Camera access denied. Browser settings mein camera allow karo.\n'+e.message);
+  }
+}
+
+function rtoStopScan(){
+  if(rtoScanInterval)clearInterval(rtoScanInterval);
+  if(rtoScanStream)rtoScanStream.getTracks().forEach(t=>t.stop());
+  rtoScanStream=null;rtoScanInterval=null;rtoDetector=null;
+  document.getElementById('rtoScanArea').style.display='none';
+  document.getElementById('rtoBtnScan').style.display='';
+  document.getElementById('rtoBtnStop').style.display='none';
+}
+
+// ── Memory Viewer ─────────────────────────────────────────
+async function rtoShowMemory(){
+  if(!rtoDb)await rtoOpenDB();
+  const tx=rtoDb.transaction(IDB_STORE,'readonly');
+  const store=tx.objectStore(IDB_STORE);
+  const req=store.getAll();
+  req.onsuccess=()=>{
+    const all=req.result.sort((a,b)=>b.ts-a.ts).slice(0,200);
+    const html=`<div style="max-height:400px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#1e293b;color:#94a3b8"><th style="padding:8px;text-align:left">AWB</th><th style="padding:8px">Order ID</th><th style="padding:8px">SKU</th><th style="padding:8px">Age</th></tr></thead>
+      <tbody>${all.map(r=>{
+        const days=Math.floor((Date.now()-r.ts)/86400000);
+        return `<tr style="border-bottom:1px solid #1e293b"><td style="padding:6px 8px;font-family:'Fira Code',monospace;font-size:11px;color:#fbbf24">${r.awb}</td><td style="padding:6px 8px;font-family:'Fira Code',monospace;font-size:11px;color:#60a5fa">${r.orderId}</td><td style="padding:6px 8px;color:#e2e8f0">${r.sku||'—'}</td><td style="padding:6px 8px;color:#94a3b8">${days}d</td></tr>`;
+      }).join('')}</tbody></table></div>
+      <div style="padding:10px 0;font-size:12px;color:#64748b">${all.length} records shown (latest 200). 60-day auto-cleanup active.</div>`;
+    
+    // Simple modal
+    const modal=document.createElement('div');
+    modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML=`<div style="background:#0f172a;border:1.5px solid #334155;border-radius:16px;padding:20px;width:100%;max-width:700px;max-height:90vh;overflow:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:16px;font-weight:800;color:#f0f0ff">🧠 Memory — ${all.length} AWB Mappings</div>
+        <button onclick="this.closest('div[style]').remove()" style="background:#334155;border:none;border-radius:8px;color:#f0f0ff;padding:6px 12px;cursor:pointer;font-weight:700">✕ Close</button>
+      </div>
+      ${html}
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  };
+}
+
+// ── Export Memory (PC → JSON file) ────────────────────────
+async function rtoExportMemory(){
+  if(!rtoDb)await rtoOpenDB();
+  return new Promise(res=>{
+    const tx=rtoDb.transaction(IDB_STORE,'readonly');
+    const store=tx.objectStore(IDB_STORE);
+    const req=store.getAll();
+    req.onsuccess=()=>{
+      const all=req.result;
+      if(all.length===0){alert('Memory empty hai — pehle Label Processor se koi PDF process karo.');return;}
+      const data={exported:Date.now(),count:all.length,records:all};
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='RTO_Memory_'+new Date().toISOString().split('T')[0]+'.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      res(all.length);
+    };
+  });
+}
+
+// ── Import Memory (Mobile ← JSON file) ───────────────────
+async function rtoImportMemory(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.records||!Array.isArray(data.records))throw new Error('Invalid format');
+      if(!rtoDb)await rtoOpenDB();
+      // Import: use put() — mobile pe fresh import chahiye even if AWB exists
+      if(!rtoDb)await rtoOpenDB();
+      const saved=await new Promise(res2=>{
+        const tx=rtoDb.transaction(IDB_STORE,'readwrite');
+        const store=tx.objectStore(IDB_STORE);
+        let n=0;
+        data.records.forEach(e=>{store.put(e);n++;});
+        tx.oncomplete=()=>res2(n);
+        tx.onerror=()=>res2(0);
+      });
+      await rtoUpdateMemCount();
+      const n=await rtoCountAll();
+      // Show success toast
+      const toast=document.createElement('div');
+      toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#15803d;color:#fff;padding:12px 24px;border-radius:12px;font-family:Nunito,sans-serif;font-size:14px;font-weight:800;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+      toast.innerHTML='✅ '+data.records.length+' mappings imported! Total: '+n;
+      document.body.appendChild(toast);
+      setTimeout(()=>toast.remove(),3000);
+    }catch(e){
+      alert('❌ Import failed: '+e.message+'\n\nSirf exported RTO Memory JSON file use karo.');
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+function rtoTab(id,btn){
+  document.querySelectorAll('.rto-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.rto-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+function rtoFt(tbId,q){
+  document.querySelectorAll('#'+tbId+' tbody tr').forEach(r=>{r.style.display=!q||r.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
+}
+
+function rtoDlXL(){
+  const wb=XLSX.utils.book_new();
+  const loss=(parseFloat(document.getElementById('rtoCostFwd').value)||50)+(parseFloat(document.getElementById('rtoCostRev').value)||50)+(parseFloat(document.getElementById('rtoCostPack').value)||20);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['AWB','Status','Order ID','Packet ID','SKU','Remark'],...rtoData.map(r=>[r.awb,r.status,r.orderId,r.packetId,r.sku,r.remark])]),'All_AWBs');
+  const rej=rtoData.filter(r=>r.status==='Rejected');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['AWB','Order ID','Packet ID','SKU','Remark','Loss (Rs)'],...rej.map(r=>[r.awb,r.orderId,r.packetId,r.sku,r.remark,loss])]),'Rejected_Action');
+  const reasons={};rtoData.forEach(r=>{const k=r.remark||'—';reasons[k]=(reasons[k]||0)+1;});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Reason','Count','% of Total'],...Object.entries(reasons).sort((a,b)=>b[1]-a[1]).map(([r,c])=>[r,c,((c/rtoData.length)*100).toFixed(1)+'%'])]),'Reason_Analysis');
+  XLSX.writeFile(wb,'RTO_SmartReport.xlsx');
+}
+
+function rtoReset(){
+  rtoStopScan();
+  rtoData=[];rtoDispatch=[];rtoPdfRaw=null;
+  document.getElementById('rtoF1').value='';document.getElementById('rtoF2').value='';
+  document.getElementById('rtoF1Name').textContent='';document.getElementById('rtoF2Name').textContent='';
+  document.getElementById('rtoUz1').classList.remove('has-file');document.getElementById('rtoUz2').classList.remove('has-file');
+  document.getElementById('rtoRes').style.display='none';document.getElementById('rtoErr').classList.remove('show');
+  document.getElementById('rtoProg').style.display='none';document.getElementById('rtoPB').style.width='0%';
+  document.getElementById('rtoAlert').classList.remove('show');
+  document.getElementById('rtoScanResult').style.display='none';
+  document.getElementById('rtoManualAwb').value='';
+}
+
+// ── DB Init + 60-day cleanup — runs AFTER all functions defined ──
+(async()=>{
+  try{
+    await rtoOpenDB();
+    const deleted=await rtoCleanup60Days();
+    if(deleted>0)console.log('RTO Memory: '+deleted+' records (61+ days) cleaned up');
+    await rtoUpdateMemCount();
+  }catch(e){console.warn('RTO DB init:',e);}
+})();
+
+// ══════════════════════════════════════════════════════════
+// UI GUIDE TOUR
+// ══════════════════════════════════════════════════════════
+const TOUR_STEPS=[
+  {target:'homeView',title:'👋 Welcome to Seller Pro!',body:'Ye tool aapke saare e-commerce operations handle karta hai — labels, returns, PDF tools. Chaliye ek quick tour karte hain!',pos:'center'},
+  {target:null,title:'📦 Step 1 — Label Processor',body:'Flipkart / Amazon / Meesho ka label PDF upload karo. Tool automatically:\n• SKU extract karega\n• Courier wise sort karega\n• Excel report banayega\n• Duplicate orders dhundega',pos:'center'},
+  {target:null,title:'🔄 Step 2 — RTO Tracker',body:'Return parcel ka status track karo:\n• RTO PDF upload karo\n• Ya sirf Dispatch Excel + AWB scan karo\n• Packet ID instantly milega\n• PC → Mobile memory transfer bhi supported',pos:'center'},
+  {target:null,title:'🔗 Merge PDF',body:'Multiple PDF files ko drag & drop se reorder karke ek file mein merge karo.',pos:'center'},
+  {target:null,title:'✂️ Crop PDF',body:'PDF ka koi bhi area drag karke select karo aur crop karo — mobile pe bhi kaam karta hai!',pos:'center'},
+  {target:null,title:'🏷️ SKU Extractor',body:'Kisi bhi platform ki invoice PDF se SKU automatically extract karo — Flipkart, Amazon, Shopsy sab support hai.',pos:'center'},
+  {target:null,title:'✅ Sab ready hai!',body:'Ab tool use karna shuru karo. Kisi bhi tool card pe tap karo. Help chahiye to "?" button dabao.',pos:'center'},
+];
+let tourStep=0;
+
+function showTour(){
+  tourStep=0;renderTourStep();
+}
+
+function renderTourStep(){
+  document.getElementById('tourOverlay')?.remove();
+  if(tourStep>=TOUR_STEPS.length)return;
+  const s=TOUR_STEPS[tourStep];
+  const total=TOUR_STEPS.length;
+  const ov=document.createElement('div');
+  ov.id='tourOverlay';
+  ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML=`
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:fadeUp .3s ease">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:#9ca3af;letter-spacing:1px">${tourStep+1} / ${total}</div>
+        <button onclick="document.getElementById('tourOverlay').remove()" style="background:#f3f4f6;border:none;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:800;color:#6b7280;cursor:pointer">✕ Skip</button>
+      </div>
+      <div style="font-size:20px;font-weight:900;color:#1a1a2e;margin-bottom:10px">${s.title}</div>
+      <div style="font-size:14px;color:#4b5563;line-height:1.7;white-space:pre-line">${s.body}</div>
+      <!-- progress dots -->
+      <div style="display:flex;gap:6px;justify-content:center;margin:18px 0 16px">
+        ${TOUR_STEPS.map((_,i)=>`<div style="width:${i===tourStep?'20px':'8px'};height:8px;border-radius:4px;background:${i===tourStep?'#667eea':'#e5e7eb'};transition:all .3s"></div>`).join('')}
+      </div>
+      <div style="display:flex;gap:10px">
+        ${tourStep>0?`<button onclick="tourStep--;renderTourStep()" style="flex:1;padding:12px;background:#f3f4f6;border:none;border-radius:10px;font-family:Nunito,sans-serif;font-size:14px;font-weight:800;color:#374151;cursor:pointer">← Back</button>`:''}
+        <button onclick="${tourStep<total-1?'tourStep++;renderTourStep()':'document.getElementById(\'tourOverlay\').remove()'}" style="flex:2;padding:12px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:10px;font-family:Nunito,sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer">${tourStep<total-1?'Next →':'🚀 Start Using!'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+// Help button — always visible
+(()=>{
+  const btn=document.createElement('button');
+  btn.innerHTML='?';
+  btn.title='Guide / Help';
+  btn.style.cssText='position:fixed;bottom:70px;right:16px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);border:none;color:#fff;font-size:18px;font-weight:900;cursor:pointer;z-index:9998;box-shadow:0 4px 16px rgba(102,126,234,.5)';
+  btn.onclick=showTour;
+  document.body.appendChild(btn);
+})();
+
+// Show tour on first ever visit
+if(!localStorage.getItem('tourDone')){
+  setTimeout(()=>{showTour();localStorage.setItem('tourDone','1');},800);
+}
+
+// ══════════════════════════════════════════════════════════
+// PWA INSTALL PROMPT — Daily
+// ══════════════════════════════════════════════════════════
+let deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  checkAndShowInstallPrompt();
+});
+
+function checkAndShowInstallPrompt(){
+  // Already installed (standalone mode) — don't show
+  if(window.matchMedia('(display-mode: standalone)').matches)return;
+  if(window.navigator.standalone)return; // iOS installed
+  // User already installed — don't show again for 365 days
+  if(localStorage.getItem('pwaInstalled')==='1')return;
+  // Show every time app opens until installed
+  setTimeout(showInstallBanner,1500);
+}
+
+function showInstallBanner(){
+  const banner=document.createElement('div');
+  banner.id='pwaInstallBanner';
+  banner.style.cssText='position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,#1a1a2e,#16213e);border-top:2px solid #667eea;padding:14px 18px;z-index:9997;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,.3);animation:slideUp .4s ease';
+  banner.innerHTML=`
+    <div style="font-size:28px">📦</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:800;color:#f0f0ff">App Install Karo!</div>
+      <div style="font-size:11px;color:#9ca3af">Home screen pe add karo — offline bhi kaam karega</div>
+    </div>
+    <button onclick="installPWA()" style="padding:9px 18px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:10px;color:#fff;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">📲 Install</button>
+    <button onclick="document.getElementById('pwaInstallBanner').remove()" style="padding:9px 12px;background:rgba(255,255,255,.1);border:none;border-radius:10px;color:#9ca3af;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer">✕</button>`;
+  document.body.appendChild(banner);
+  // Auto hide after 12 seconds
+  setTimeout(()=>banner.remove(),12000);
+}
+
+async function installPWA(){
+  document.getElementById('pwaInstallBanner')?.remove();
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const{outcome}=await deferredInstallPrompt.userChoice;
+    if(outcome==='accepted')localStorage.setItem('pwaInstalled','1');
+    deferredInstallPrompt=null;
+  } else {
+    // iOS fallback
+    alert('iOS pe install karne ke liye:\nSafari mein → Share button → "Add to Home Screen" tap karo 📲');
+  }
+}
+
+// iOS: Show manual install hint every session until installed
+(()=>{
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const isInstalled=window.navigator.standalone||localStorage.getItem('pwaInstalled')==='1';
+  if(isIOS&&isSafari&&!isInstalled){
+    setTimeout(()=>showInstallBanner(),1500);
+  }
+})();
+
+// CSS animations
+const styleEl=document.createElement('style');
+styleEl.textContent=`
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+`;
+document.head.appendChild(styleEl);
+</script>
+</body>
+</html>
