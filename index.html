@@ -1457,6 +1457,12 @@ body.dark .ht-line{background:linear-gradient(90deg,transparent,var(--border2))!
       <div style="margin-top:8px">
         <button onclick="dmClearCloudConfirm()" id="dmCloudClearBtn" style="display:block;width:100%;padding:9px;border-radius:9px;border:1.5px solid #fca5a5;background:#fff5f5;color:#dc2626;font-weight:700;cursor:pointer;font-size:12px">🗑️ Saara Cloud Data Delete Karo</button>
       </div>
+      <!-- RLS Fix Helper -->
+      <div id="dmRlsHelp" style="display:none;margin-top:8px;background:#fff8e1;border:1.5px solid #fbbf24;border-radius:10px;padding:10px 12px;font-size:11px;font-weight:600;color:#92400e;line-height:1.6">
+        ⚠️ <b>Delete kaam nahi kar raha?</b> Supabase RLS policy missing hai.<br>
+        Supabase Dashboard → Table Editor → <b>orders / cancels / returns</b> table select karo → <b>RLS</b> tab → <b>"Disable RLS"</b> karo ya DELETE policy add karo.<br>
+        <a href="https://supabase.com/dashboard" target="_blank" style="color:#1e40af;font-weight:800">👉 Supabase Dashboard Kholo</a>
+      </div>
     </div>
 
 
@@ -3193,6 +3199,14 @@ async function sbReq(method, table, body=null, params=''){
     if(!r.ok){
       const errText = await r.text().catch(()=>'');
       console.error('[Supabase] Error:',r.status,r.statusText,errText,'URL:',url);
+      // DELETE fail pe user ko dikhao (RLS policy missing etc.)
+      if(method==='DELETE'){
+        const errMsg = r.status===403||r.status===401 ? '🔒 Supabase RLS policy — DELETE blocked. Neeche help dekho.' : ('⚠️ Delete fail: HTTP '+r.status+' — Console check karo');
+        if(typeof toast==='function') toast(errMsg,'#dc2626',6000);
+        // RLS help banner dikhao
+        const rlsHelp=document.getElementById('dmRlsHelp');
+        if(rlsHelp) rlsHelp.style.display='block';
+      }
       return null;
     }
     if(method==='GET') return await r.json();
@@ -3470,7 +3484,8 @@ async function cloudGetAll(table){
 }
 async function cloudClear(table){
   if(!SUPABASE_ENABLED) return;
-  // Har table ka alag primary key aur type
+  // ✅ FIX: 'shipped' virtual table nahi hai — Supabase mein asli naam 'orders' hai
+  if(table==='shipped') table='orders';
   const textPKTables = ['awb_memory','cancels','returns','sku_master','dispatch','stock_in','orders','product_names'];
   const pkMap={
     'awb_memory':'awb',
@@ -3484,10 +3499,13 @@ async function cloudClear(table){
   };
   const pk=pkMap[table]||'id';
   if(textPKTables.includes(table)){
-    // ✅ FIX: Text PK ke liye neq.'' use karo — 'like.*' SQL mein kaam nahi karta (% chahiye * nahi)
-    await sbReq('DELETE',table,null,`${pk}=neq.`);
+    // ✅ FIX: neq.'' = "not equal to empty" — sab rows match honge
+    const result = await sbReq('DELETE',table,null,`${pk}=neq.`);
+    if(result===null){
+      // Fallback: gt.'' try karo (kuch Supabase versions mein neq.'' se issue)
+      await sbReq('DELETE',table,null,`${pk}=gt.`).catch(()=>{});
+    }
   } else {
-    // Numeric PK: gte.0 se delete karo
     await sbReq('DELETE',table,null,`${pk}=gte.0`);
   }
 }
