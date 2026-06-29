@@ -495,107 +495,147 @@ tbody td:first-child{font-family:'JetBrains Mono',monospace;font-size:11px;color
 .fi-sz{font-size:10px;color:var(--muted);font-weight:600;flex-shrink:0;}
 .fi-rm{background:none;border:none;color:rgba(239,68,68,.45);font-size:13px;cursor:pointer;padding:0 3px;}
 .fi-rm:hover{color:#ef4444;}
-/* Toast */
-#toastEl{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:#fff;color:#1a1a2e;padding:9px 18px;border-radius:9px;font-size:12px;font-weight:600;font-family:'Outfit','DM Sans',sans-serif;z-index:9999;transition:transform .28s,opacity .28s;opacity:0;pointer-events:none;max-width:280px;text-align:center;border:1.5px solid rgba(124,58,237,.3);box-shadow:0 4px 20px rgba(124,58,237,.15);}
-#toastEl.show{transform:translateX(-50%) translateY(0);opacity:1;}
-/* Report */
-.rep-stat{background:var(--surface)!important;border-radius:11px;padding:13px;border:1px solid var(--border);text-align:center;position:relative;overflow:hidden;}
-.rep-stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--sc1),var(--sc2));}
-.rep-n{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;color:var(--sc1);}
-.rep-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-top:3px;font-family:'Outfit','DM Sans',sans-serif;}
-/* Scrollbar */
-#retManualCourierPills::-webkit-scrollbar{display:none}
-#canManualCourierPills::-webkit-scrollbar{display:none}
-::-webkit-scrollbar{width:4px;height:4px;}
-::-webkit-scrollbar-track{background:var(--surface);}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-::-webkit-scrollbar-thumb:hover{background:var(--accent);}
-/* TOP NAV */
-.home-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#fff;border-bottom:1px solid #e9e4ff;overflow:hidden;gap:8px;}
-.home-nav-logo{display:flex;align-items:center;gap:8px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-weight:800;font-size:18px;color:#000;letter-spacing:-.3px;}
-.home-nav-platforms{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;}@media(max-width:380px){.home-nav-platforms{display:none;}}
-.plat-meesho{color:#e91e8c;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-weight:800;font-size:14px;letter-spacing:-.5px;}
-.plat-flipkart{color:#2874f0;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-weight:800;font-size:13px;}
-.plat-amazon{color:#232f3e;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-weight:800;font-size:13px;letter-spacing:-.5px;}
-.plat-div{color:#d1c4e9;font-size:20px;font-weight:300;}
-/* HERO */
-.home-hero{
-  background:linear-gradient(135deg,#8b5cf6 0%,#a855f7 30%,#c084fc 60%,#d8b4fe 85%,#ede9fe 100%);
-  display:flex;align-items:center;justify-content:center;gap:0;min-height:320px;padding:40px 28px;
-  position:relative;overflow:hidden;
+/* ══ HOME v4 — EXACT REFERENCE MATCH ══ */
+/* GLOBAL BG */
+.sp-home{background:#eeeaf8;min-height:100vh;}
+/* NAV */
+.home-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 16px;background:#fff;
+  border-bottom:1px solid #ebe7f5;
+  position:sticky;top:0;z-index:200;
 }
-@media(max-width:600px){
-  .home-hero{flex-direction:column !important;padding:28px 14px;min-height:auto;gap:8px;align-items:center;}
-  .home-hero-visual{flex:0 0 45% !important;display:flex;align-items:center;justify-content:center;}
-  .home-hero-visual img{max-width:100% !important;}
-  .home-hero-text{flex:1;padding-left:0 !important;text-align:center;align-items:center;}
-  .home-hero-text h1{font-size:28px !important;margin-bottom:4px !important;text-align:center;}
-  .home-hero-text h1 span:first-child{font-size:30px !important;}
-  .home-hero-text h1 span:last-child{font-size:36px !important;}
-  .home-hero-text p{font-size:11px;margin-bottom:12px;text-align:center;}
+.home-nav-logo{display:flex;align-items:center;gap:9px;font-family:'Outfit',sans-serif;font-weight:900;font-size:18px;color:#0f0a1e;}
+.home-nav-actions{display:flex;align-items:center;gap:10px;}
+.home-nav-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;}
+.home-nav-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#6b7280;cursor:pointer;font-size:16px;}
+/* SUB HEADER */
+.home-subhdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 16px;background:#fff;border-bottom:1px solid #ebe7f5;gap:10px;
 }
-.home-hero::before{
-  content:'';position:absolute;inset:0;
-  background:url("data:image/svg+xml,%3Csvg width='600' height='400' viewBox='0 0 600 400' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='100' cy='100' r='2' fill='rgba(255,255,255,0.4)'/%3E%3Ccircle cx='200' cy='50' r='1.5' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='350' cy='120' r='2' fill='rgba(255,255,255,0.35)'/%3E%3Ccircle cx='500' cy='80' r='1.5' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='450' cy='200' r='2.5' fill='rgba(255,255,255,0.25)'/%3E%3Ccircle cx='150' cy='280' r='2' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='550' cy='300' r='1.5' fill='rgba(255,255,255,0.35)'/%3E%3Cline x1='100' y1='100' x2='200' y2='50' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Cline x1='200' y1='50' x2='350' y2='120' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Cline x1='350' y1='120' x2='500' y2='80' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Cline x1='500' y1='80' x2='450' y2='200' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Cline x1='150' y1='280' x2='350' y2='120' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3C/svg%3E") center/cover;
-  pointer-events:none;
+.home-subhdr-txt{font-size:11px;color:#6b7280;font-family:'Outfit',sans-serif;font-weight:500;line-height:1.45;flex:1;}
+.home-toggle-pill{
+  display:flex;align-items:center;gap:2px;
+  background:#f3f0ff;border:1px solid #ddd6fe;border-radius:20px;padding:3px 5px;
+  flex-shrink:0;
 }
-/* Hero visual */
-.home-hero-visual{flex:0 0 45%;position:relative;z-index:2;display:flex;justify-content:center;overflow:hidden;}
-/* Hero text */
-.home-hero-text{flex:1;position:relative;z-index:2;padding-left:0;text-align:center;display:flex;flex-direction:column;align-items:center;}
-/* FEATURED TOOLS */
-.home-tools-section{padding:28px 14px 60px;background:#f3f0ff;overflow:hidden;}
-.home-tools-heading{display:flex;align-items:center;gap:14px;margin-bottom:22px;justify-content:center;}
-.ht-line{flex:1;max-width:120px;height:1px;background:linear-gradient(90deg,transparent,#c4b5fd);}
-.ht-label{font-size:11px;font-weight:800;letter-spacing:2.5px;color:#1e40af;font-family:'Outfit','DM Sans',sans-serif;white-space:nowrap;}
-/* Tool cards — 4-column grid, centered narrow wrapper */
-.home-tools-list-wrap{max-width:900px;margin:0 auto;}
-.home-tools-list{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-@media(max-width:700px){.home-tools-list{grid-template-columns:repeat(2,1fr);}
-.home-tools-list .htc:last-child:nth-child(odd){grid-column:1/-1;justify-self:center;width:70%;}
-.home-tools-list-wrap{max-width:100%;}}
-.htc{
-  background:#fff;border-radius:14px;padding:11px 10px;
-  box-shadow:0 2px 12px rgba(124,58,237,.08),0 1px 3px rgba(0,0,0,.04);
-  border:1.5px solid rgba(200,185,255,.35);
-  cursor:pointer;transition:all .22s cubic-bezier(.34,1.26,.64,1);
-  display:flex;flex-direction:column;gap:0;
-  position:relative;overflow:hidden;
+.home-toggle-pill button{
+  font-size:10px;font-weight:700;padding:3px 9px;border-radius:16px;
+  border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;
 }
-.htc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--tc1,#7c3aed),var(--tc2,#a855f7));opacity:0;transition:opacity .2s;}
-.htc:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(124,58,237,.16);border-color:rgba(168,85,247,.35);}
-.htc:hover::before{opacity:1;}
-.htc:active{transform:translateY(-1px);}
-/* Icon + title row */
-.htc-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.htc-icon{
-  width:38px;height:38px;border-radius:10px;
+/* HERO AREA */
+.home-hero{background:#eeeaf8;padding:14px 12px 0;display:flex;gap:10px;}
+/* LEFT: carousel card */
+.hero-carousel{
+  flex:1;background:#fff;border-radius:18px;
+  padding:18px 16px 14px;
+  box-shadow:0 4px 20px rgba(100,80,200,.08);
+  border:1px solid #ebe7f5;
+  min-width:0;overflow:hidden;
+}
+.carousel-slides{overflow:hidden;}
+.carousel-slide{display:none;animation:fadeIn .3s ease;}
+.carousel-slide.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateX(8px);}to{opacity:1;transform:translateX(0);}}
+.carousel-img{
+  width:100%;height:90px;border-radius:12px;
+  background:linear-gradient(135deg,#ede9fe,#ddd6fe);
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 3px 10px rgba(0,0,0,.15);
-  flex-shrink:0;transition:transform .22s cubic-bezier(.34,1.56,.64,1);
+  margin-bottom:10px;overflow:hidden;position:relative;
 }
-.htc:hover .htc-icon{transform:scale(1.08) rotate(-4deg);}
+.carousel-dots{display:flex;gap:5px;justify-content:center;margin:10px 0 6px;}
+.carousel-dot{width:6px;height:6px;border-radius:50%;background:#ddd6fe;transition:all .2s;cursor:pointer;}
+.carousel-dot.active{width:16px;border-radius:4px;background:#7c3aed;}
+.hero-platforms{display:flex;align-items:center;gap:7px;margin:12px 0 8px;}
+.hero-cta{
+  width:100%;background:#0f0a1e;color:#fff;
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;
+  padding:10px 0;border-radius:10px;border:none;cursor:pointer;
+  letter-spacing:-.1px;transition:transform .15s;
+}
+.hero-cta:active{transform:scale(.97);}
+.hero-desc{font-size:10px;color:#888;font-family:'Outfit',sans-serif;line-height:1.5;margin-bottom:10px;}
+/* RIGHT: recent activities */
+.hero-activity{
+  width:130px;flex-shrink:0;background:#fff;border-radius:18px;
+  padding:12px 10px;
+  box-shadow:0 4px 20px rgba(100,80,200,.08);
+  border:1px solid #ebe7f5;
+  display:flex;flex-direction:column;
+}
+.act-title{font-size:11px;font-weight:800;color:#0f0a1e;font-family:'Outfit',sans-serif;margin-bottom:10px;}
+.act-item{display:flex;gap:6px;margin-bottom:9px;align-items:flex-start;}
+.act-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0;}
+.act-text{flex:1;min-width:0;}
+.act-name{font-size:9px;font-weight:700;color:#0f0a1e;font-family:'Outfit',sans-serif;line-height:1.3;}
+.act-desc{font-size:8.5px;color:#9ca3af;font-family:'Outfit',sans-serif;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.act-time{font-size:8px;color:#b0aac8;font-family:'Outfit',sans-serif;margin-top:1px;}
+.act-highlight{color:#7c3aed;font-weight:600;}
+.act-viewall{font-size:9px;font-weight:700;color:#7c3aed;font-family:'Outfit',sans-serif;text-align:center;padding:6px 0 0;border-top:1px solid #f3f0ff;cursor:pointer;margin-top:auto;}
+/* TOOLS SECTION */
+.home-tools-section{padding:14px 12px 80px;background:#eeeaf8;}
+.home-tools-heading{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.ht-line{flex:1;height:1px;background:#ccc8e8;}
+.ht-label{font-size:11px;font-weight:800;letter-spacing:2px;color:#1e1b4b;font-family:'Outfit',sans-serif;white-space:nowrap;}
+.home-tools-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+/* TOOL CARD */
+.htc{
+  background:#fff;border-radius:14px;padding:8px 10px 8px;
+  border:1px solid #ebe7f5;cursor:pointer;
+  transition:transform .15s;
+  display:flex;flex-direction:column;
+  box-shadow:0 3px 12px rgba(100,80,200,.07);
+}
+.htc:active{transform:scale(.97);}
+.htc-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.htc-icon{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 8px rgba(0,0,0,.12);
+}
 .htc-text{flex:1;min-width:0;}
-.htc-title{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:2px;line-height:1.2;}
-.htc-sub{font-size:10px;color:#6b7280;font-family:'Outfit','DM Sans',sans-serif;font-weight:500;line-height:1.3;}
+.htc-title{font-family:'Outfit',sans-serif;font-size:12px;font-weight:800;color:#0f0a1e;margin-bottom:2px;line-height:1.2;}
+.htc-sub{font-size:9px;color:#1a1a2e;font-family:'Outfit',sans-serif;font-weight:500;line-height:1.3;}
 .htc-btn{
-  width:100%;padding:6px 0;
-  background:linear-gradient(135deg,#7c3aed,#a855f7);
-  border:none;border-radius:8px;
-  color:#fff;font-family:'Outfit','DM Sans',sans-serif;
-  font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.3px;
-  transition:all .2s;box-shadow:0 2px 8px rgba(124,58,237,.22);
+  width:100%;padding:6px 0;border:none;border-radius:8px;
+  color:#fff;font-family:'Outfit',sans-serif;
+  font-size:10px;font-weight:700;cursor:pointer;
+  letter-spacing:.1px;transition:opacity .15s;margin-top:auto;
 }
-.htc-btn:hover{box-shadow:0 5px 16px rgba(124,58,237,.4);}
+.htc-btn:active{opacity:.85;}
+/* UNUSED LEGACY */
+.home-hero-inner,.home-hero-text,.home-hero-badge,.home-hero-platforms,
+.home-hero-cta,.home-hero-desc,.home-hero-img-row,.home-stats-strip,
+.hss-item,.hss-val,.hss-lbl,.hss-icon,.home-sec-label,
+.home-nav-platforms,.plat-meesho,.plat-flipkart,.plat-amazon,.plat-div{display:none!important;}
 @keyframes marqueeScroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-/* ── Dark mode: Home page sections ── */
-body.dark .home-tools-section{background:var(--bg)!important;}
-body.dark .htc{background:var(--surface)!important;border-color:var(--border)!important;}
-body.dark .htc-title{color:var(--text)!important;}
-body.dark .htc-sub{color:var(--muted)!important;}
-body.dark .home-nav{background:var(--surface)!important;border-color:var(--border)!important;}
-body.dark .ht-label{color:#93c5fd!important;}
-body.dark .ht-line{background:linear-gradient(90deg,transparent,var(--border2))!important;}
+/* DARK MODE */
+body.dark .sp-home{background:#08051a!important;}
+body.dark .home-nav,body.dark .home-subhdr{background:#100c24!important;border-color:#1e1840!important;}
+body.dark .home-nav-logo{color:#f0ecff!important;}
+body.dark .home-subhdr-txt{color:#5a5680!important;}
+body.dark .hero-carousel,body.dark .hero-activity{background:#160e36!important;border-color:#241d50!important;}
+body.dark .act-title,body.dark .act-name{color:#f0ecff!important;}
+body.dark .home-tools-section{background:#08051a!important;}
+body.dark .htc{background:#160e36!important;border-color:#241d50!important;}
+body.dark .htc-title{color:#f0ecff!important;}
+body.dark .htc-sub{color:#a0a0b8!important;}
+body.dark .ht-line{background:#241d50!important;}
+body.dark .ht-label{color:#a5b4fc!important;}
+body.dark .home-toggle-pill{background:#1e1640!important;border-color:#3d2d80!important;}
+
+/* ── 2D INFOGRAPHIC BANNER ── */
+.sp-inf2d{
+  margin:14px 12px 12px;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 6px 32px rgba(100,70,220,.13);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.sp-inf2d:active{transform:scale(.99);}
+body.dark .sp-inf2d{box-shadow:0 6px 32px rgba(0,0,0,.4);}
 </style>
 </head>
 <body>
@@ -603,187 +643,418 @@ body.dark .ht-line{background:linear-gradient(90deg,transparent,var(--border2))!
 <!-- ════════════════════════════════════════════════ HOME ════ -->
 <div id="homeView" class="view active sp-home">
 
-  <!-- TOP NAV BAR -->
-  <div class="home-nav">
-    <div class="home-nav-logo">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7l9 5 9-5-9-5z" fill="#a855f7"/><path d="M3 12l9 5 9-5" stroke="#c084fc" stroke-width="1.5" stroke-linecap="round"/><path d="M3 17l9 5 9-5" stroke="#ddd6fe" stroke-width="1.5" stroke-linecap="round" opacity=".5"/></svg>
-      <span style="color:#1a1a2e;font-weight:900;">Seller Pro</span>
+  <!-- NAV — single row: logo + platforms + night/light -->
+  <div class="home-nav" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border-bottom:1px solid #ebe7f5;position:sticky;top:0;z-index:200;gap:8px;">
+    <div class="home-nav-logo" style="display:flex;align-items:center;gap:8px;font-family:Outfit,sans-serif;font-weight:900;font-size:17px;color:#0f0a1e;">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="8" fill="#0f0a1e"/><path d="M14 6L21 10V18L14 22L7 18V10Z" fill="none" stroke="#a855f7" stroke-width="1.6"/><path d="M14 6L21 10L14 14L7 10Z" fill="#7c3aed" opacity=".8"/><path d="M14 14V22" stroke="#a855f7" stroke-width="1.4" opacity=".5"/></svg>
+      Seller Pro
     </div>
-    <div class="home-nav-platforms">
-      <span class="plat-meesho">meesho</span>
-      <span class="plat-div">|</span>
-      <span class="plat-flipkart">Flipkart</span>
-      <span class="plat-div">|</span>
-      <span class="plat-amazon">amazon</span>
+    <div style="display:flex;align-items:center;gap:5px;flex:1;justify-content:center;">
+      <span style="color:#e91e8c;font-family:Outfit,sans-serif;font-weight:800;font-size:13px;">meesho</span>
+      <span style="color:#ddd6fe;font-size:14px;font-weight:300;">|</span>
+      <span style="color:#2874f0;font-family:Outfit,sans-serif;font-weight:800;font-size:13px;">Flipkart</span>
+      <span style="color:#ddd6fe;font-size:14px;font-weight:300;">|</span>
+      <span style="color:#232f3e;font-family:Outfit,sans-serif;font-weight:800;font-size:13px;">amazon</span>
     </div>
-    <div style="display:flex;align-items:center;gap:7px">
-      <button class="dm-btn" onclick="toggleDark()" id="homeDmBtn">🌙 Night</button>
-    </div>
-  </div>
-
-  <!-- HERO SECTION -->
-  <div class="home-hero">
-    <!-- Hero Image Removed -->
-
-    <!-- Right: Text -->
-      <div class="home-hero-text">
-      <h1 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(32px,8vw,48px);font-weight:900;line-height:1.05;color:#fff;margin-bottom:6px;letter-spacing:-1.5px;text-shadow:0 4px 30px rgba(0,0,0,0.2);">
-        <span style="display:block;font-size:clamp(28px,7vw,52px);background:linear-gradient(135deg,#fff 0%,#f3e8ff 50%,#e9d5ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Seller</span>
-        <span style="display:block;font-size:clamp(36px,9vw,64px);background:linear-gradient(135deg,#ffd700 0%,#fff 40%,#f3e8ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;">Pro</span>
-      </h1>
-      <div style="display:inline-block;font-family:'Outfit','DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:rgba(80,0,120,0.85);text-transform:uppercase;margin-bottom:12px;padding:3px 10px;background:rgba(255,255,255,0.4);border-radius:20px;border:1px solid rgba(255,255,255,0.5);">✦ E-Commerce Toolkit</div>
-      <p style="font-size:14px;line-height:1.75;color:rgba(80,0,120,0.9);font-family:'Outfit','DM Sans',sans-serif;max-width:400px;margin-bottom:24px;">Shipping labels, courier sorting, cancel tracking, RTO management, SKU reports — <strong style="color:#3b0764;font-weight:800;">sab kuch ek jagah</strong>, seconds mein.</p>
-
+    <div style="display:flex;align-items:center;gap:1px;background:#f5f4fb;border:1px solid #e4e0f5;border-radius:14px;padding:2px 3px;flex-shrink:0;">
+      <button onclick="if(!document.body.classList.contains('dark'))toggleDark()" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:11px;border:none;background:#fff;color:#0f0a1e;font-family:Outfit,sans-serif;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.07);">🌙</button>
+      <button onclick="if(document.body.classList.contains('dark'))toggleDark()" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:11px;border:none;background:transparent;color:#aaa;font-family:Outfit,sans-serif;cursor:pointer;">☀️</button>
     </div>
   </div>
 
-  <!-- FEATURED TOOLS -->
+  <!-- ══ INFOGRAPHIC HERO BANNER ══ -->
+  <div class="sp-inf2d" onclick="goTo('labelView')">
+  <svg viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <!-- Main bg gradient -->
+      <linearGradient id="bg2d" x1="0" y1="0" x2="360" y2="220" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#1e0a4a"/>
+        <stop offset="55%" stop-color="#3b1280"/>
+        <stop offset="100%" stop-color="#6d28d9"/>
+      </linearGradient>
+      <!-- Shine overlay -->
+      <linearGradient id="shine2d" x1="0" y1="0" x2="0" y2="220" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#fff" stop-opacity=".06"/>
+        <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+      <!-- Card gradients -->
+      <linearGradient id="gCard1" x1="0" y1="0" x2="0" y2="1" gradientTransform="rotate(135)">
+        <stop offset="0%" stop-color="#7c3aed"/>
+        <stop offset="100%" stop-color="#4f46e5"/>
+      </linearGradient>
+      <linearGradient id="gCard2" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#059669"/>
+        <stop offset="100%" stop-color="#047857"/>
+      </linearGradient>
+      <linearGradient id="gCard3" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#f59e0b"/>
+        <stop offset="100%" stop-color="#ea580c"/>
+      </linearGradient>
+      <linearGradient id="gCard4" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#3b82f6"/>
+        <stop offset="100%" stop-color="#6366f1"/>
+      </linearGradient>
+      <linearGradient id="gCard5" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ec4899"/>
+        <stop offset="100%" stop-color="#8b5cf6"/>
+      </linearGradient>
+      <linearGradient id="gBar1" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#a78bfa"/>
+        <stop offset="100%" stop-color="#6d28d9"/>
+      </linearGradient>
+      <linearGradient id="gBar2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#34d399"/>
+        <stop offset="100%" stop-color="#059669"/>
+      </linearGradient>
+      <linearGradient id="gBar3" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#fbbf24"/>
+        <stop offset="100%" stop-color="#f59e0b"/>
+      </linearGradient>
+      <linearGradient id="gBar4" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#60a5fa"/>
+        <stop offset="100%" stop-color="#3b82f6"/>
+      </linearGradient>
+      <filter id="softBlur">
+        <feGaussianBlur stdDeviation="18"/>
+      </filter>
+      <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity=".18"/>
+      </filter>
+      <filter id="glowPurple" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#a855f7" flood-opacity=".5"/>
+      </filter>
+      <clipPath id="banner2dClip"><rect width="360" height="220" rx="20"/></clipPath>
+    </defs>
+
+    <g clip-path="url(#banner2dClip)">
+
+    <!-- ── BACKGROUND ── -->
+    <rect width="360" height="220" fill="url(#bg2d)"/>
+    <rect width="360" height="220" fill="url(#shine2d)"/>
+
+    <!-- decorative glow blobs -->
+    <circle cx="300" cy="40" r="70" fill="#7c3aed" opacity=".25" filter="url(#softBlur)"/>
+    <circle cx="60" cy="180" r="55" fill="#4f46e5" opacity=".2" filter="url(#softBlur)"/>
+    <circle cx="180" cy="110" r="50" fill="#6d28d9" opacity=".12" filter="url(#softBlur)"/>
+
+    <!-- subtle dot grid -->
+    <g opacity=".07">
+      <circle cx="20" cy="20" r="1.2" fill="#fff"/><circle cx="50" cy="20" r="1.2" fill="#fff"/><circle cx="80" cy="20" r="1.2" fill="#fff"/><circle cx="110" cy="20" r="1.2" fill="#fff"/><circle cx="140" cy="20" r="1.2" fill="#fff"/><circle cx="170" cy="20" r="1.2" fill="#fff"/><circle cx="200" cy="20" r="1.2" fill="#fff"/><circle cx="230" cy="20" r="1.2" fill="#fff"/><circle cx="260" cy="20" r="1.2" fill="#fff"/><circle cx="290" cy="20" r="1.2" fill="#fff"/><circle cx="320" cy="20" r="1.2" fill="#fff"/><circle cx="350" cy="20" r="1.2" fill="#fff"/>
+      <circle cx="20" cy="50" r="1.2" fill="#fff"/><circle cx="50" cy="50" r="1.2" fill="#fff"/><circle cx="80" cy="50" r="1.2" fill="#fff"/><circle cx="110" cy="50" r="1.2" fill="#fff"/><circle cx="140" cy="50" r="1.2" fill="#fff"/><circle cx="170" cy="50" r="1.2" fill="#fff"/><circle cx="200" cy="50" r="1.2" fill="#fff"/><circle cx="230" cy="50" r="1.2" fill="#fff"/><circle cx="260" cy="50" r="1.2" fill="#fff"/><circle cx="290" cy="50" r="1.2" fill="#fff"/><circle cx="320" cy="50" r="1.2" fill="#fff"/><circle cx="350" cy="50" r="1.2" fill="#fff"/>
+      <circle cx="20" cy="80" r="1.2" fill="#fff"/><circle cx="50" cy="80" r="1.2" fill="#fff"/><circle cx="80" cy="80" r="1.2" fill="#fff"/><circle cx="110" cy="80" r="1.2" fill="#fff"/><circle cx="350" cy="80" r="1.2" fill="#fff"/><circle cx="320" cy="80" r="1.2" fill="#fff"/>
+    </g>
+
+    <!-- ── TOP BADGE ── -->
+    <rect x="14" y="13" width="88" height="17" rx="8.5" fill="#fff" opacity=".12"/>
+    <circle cx="24" cy="21.5" r="3.5" fill="#a3e635"/>
+    <text x="31" y="25.5" font-family="Outfit,sans-serif" font-size="8.5" font-weight="800" fill="#fff" opacity=".9">SELLER PRO</text>
+
+    <!-- platform pills top-right -->
+    <rect x="212" y="13" width="38" height="15" rx="7.5" fill="#fce7f3" opacity=".92"/>
+    <text x="231" y="24" font-family="Outfit,sans-serif" font-size="7.5" font-weight="900" fill="#c2185b" text-anchor="middle">meesho</text>
+    <rect x="254" y="13" width="38" height="15" rx="7.5" fill="#e3f2fd" opacity=".92"/>
+    <text x="273" y="24" font-family="Outfit,sans-serif" font-size="7.5" font-weight="900" fill="#1565c0" text-anchor="middle">Flipkart</text>
+    <rect x="296" y="13" width="52" height="15" rx="7.5" fill="#fff8e1" opacity=".92"/>
+    <text x="322" y="24" font-family="Outfit,sans-serif" font-size="7.5" font-weight="900" fill="#b45309" text-anchor="middle">amazon</text>
+
+    <!-- ── MAIN HEADLINE ── -->
+    <text x="14" y="54" font-family="Outfit,sans-serif" font-size="22" font-weight="900" fill="#fff" letter-spacing="-0.5">Seller Pro</text>
+    <text x="14" y="72" font-family="Outfit,sans-serif" font-size="12" font-weight="500" fill="#c4b5fd" letter-spacing="0.2">One app. All platforms. Zero chaos.</text>
+
+    <!-- ── FEATURE CARDS ROW ── -->
+    <!-- Card 1: Label Processor -->
+    <rect x="14" y="84" width="60" height="62" rx="12" fill="url(#gCard1)" filter="url(#cardShadow)"/>
+    <!-- PDF icon -->
+    <rect x="24" y="94" width="22" height="26" rx="4" fill="#fff" opacity=".2"/>
+    <rect x="26" y="98" width="14" height="2" rx="1" fill="#fff" opacity=".7"/>
+    <rect x="26" y="102" width="11" height="2" rx="1" fill="#fff" opacity=".5"/>
+    <rect x="26" y="106" width="12" height="2" rx="1" fill="#fff" opacity=".4"/>
+    <rect x="26" y="110" width="8" height="2" rx="1" fill="#fff" opacity=".3"/>
+    <rect x="33" y="108" width="10" height="10" rx="2.5" fill="#fff" opacity=".18"/>
+    <circle cx="35" cy="106" r="4" fill="#fff" opacity=".85"/>
+    <path d="M33.5 106l1.3 1.3 2.2-2.2" stroke="#7c3aed" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="44" y="135" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">Label</text>
+    <text x="44" y="143" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">Processor</text>
+
+    <!-- Card 2: Stock Picker -->
+    <rect x="80" y="84" width="60" height="62" rx="12" fill="url(#gCard2)" filter="url(#cardShadow)"/>
+    <!-- checklist icon -->
+    <rect x="90" y="94" width="22" height="24" rx="4" fill="#fff" opacity=".2"/>
+    <circle cx="94" cy="100" r="2" fill="#fff" opacity=".7"/>
+    <rect x="98" y="99" width="10" height="2" rx="1" fill="#fff" opacity=".7"/>
+    <circle cx="94" cy="106" r="2" fill="#fff" opacity=".7"/>
+    <rect x="98" y="105" width="8" height="2" rx="1" fill="#fff" opacity=".5"/>
+    <circle cx="94" cy="112" r="2" fill="#fff" opacity=".5"/>
+    <rect x="98" y="111" width="9" height="2" rx="1" fill="#fff" opacity=".4"/>
+    <circle cx="124" cy="104" r="7" fill="#fff" opacity=".9"/>
+    <path d="M120.5 104l2.5 2.5 4-4" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="110" y="135" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">Stock</text>
+    <text x="110" y="143" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">Picker</text>
+
+    <!-- Card 3: Scanners -->
+    <rect x="146" y="84" width="60" height="62" rx="12" fill="url(#gCard3)" filter="url(#cardShadow)"/>
+    <!-- camera/scan icon -->
+    <rect x="154" y="96" width="26" height="20" rx="5" fill="#fff" opacity=".25"/>
+    <circle cx="167" cy="106" r="6" fill="#fff" opacity=".85"/>
+    <circle cx="167" cy="106" r="3.5" fill="#f59e0b"/>
+    <circle cx="167" cy="106" r="1.5" fill="#fff"/>
+    <rect x="171" y="93" width="5" height="3" rx="1.5" fill="#fff" opacity=".6"/>
+    <!-- scan lines -->
+    <rect x="156" y="118" width="30" height="1.5" rx=".75" fill="#fff" opacity=".5"/>
+    <rect x="158" y="121" width="8" height="1.5" rx=".75" fill="#fff" opacity=".3"/>
+    <rect x="170" y="121" width="8" height="1.5" rx=".75" fill="#fff" opacity=".3"/>
+    <text x="176" y="135" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">Scanners</text>
+    <text x="176" y="143" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">&amp; RTO</text>
+
+    <!-- Card 4: Live Stock -->
+    <rect x="212" y="84" width="60" height="62" rx="12" fill="url(#gCard4)" filter="url(#cardShadow)"/>
+    <!-- line chart -->
+    <rect x="220" y="94" width="40" height="24" rx="4" fill="#fff" opacity=".15"/>
+    <polyline points="222,114 229,108 236,111 243,102 250,105 257,97" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="257" cy="97" r="2.5" fill="#fff"/>
+    <!-- mini bars -->
+    <rect x="222" y="108" width="5" height="10" rx="1.5" fill="#fff" opacity=".25"/>
+    <rect x="230" y="104" width="5" height="14" rx="1.5" fill="#fff" opacity=".25"/>
+    <rect x="238" y="99" width="5" height="19" rx="1.5" fill="#fff" opacity=".25"/>
+    <text x="242" y="135" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">Live</text>
+    <text x="242" y="143" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">Stock</text>
+
+    <!-- Card 5: Reports -->
+    <rect x="278" y="84" width="68" height="62" rx="12" fill="url(#gCard5)" filter="url(#cardShadow)"/>
+    <!-- bar chart icon -->
+    <rect x="286" y="96" width="42" height="24" rx="4" fill="#fff" opacity=".15"/>
+    <rect x="289" y="108" width="7" height="12" rx="2" fill="#fff" opacity=".6"/>
+    <rect x="299" y="104" width="7" height="16" rx="2" fill="#fff" opacity=".8"/>
+    <rect x="309" y="100" width="7" height="20" rx="2" fill="#fff" opacity=".9"/>
+    <rect x="319" y="106" width="7" height="14" rx="2" fill="#fff" opacity=".65"/>
+    <path d="M287 120h36" stroke="#fff" stroke-width=".8" opacity=".4"/>
+    <text x="312" y="135" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">Reports</text>
+    <text x="312" y="143" font-family="Outfit,sans-serif" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">&amp; Analytics</text>
+
+    <!-- ── STATS ROW ── -->
+    <!-- stat 1: Orders -->
+    <rect x="14" y="155" width="78" height="32" rx="10" fill="#fff" opacity=".1"/>
+    <rect x="14" y="155" width="78" height="32" rx="10" fill="none" stroke="#fff" stroke-width=".5" opacity=".2"/>
+    <text x="24" y="168" font-family="Outfit,sans-serif" font-size="7.5" font-weight="700" fill="#c4b5fd">📦 Multi-PDF Sort</text>
+    <text x="24" y="180" font-family="Outfit,sans-serif" font-size="8.5" font-weight="900" fill="#fff">Bulk Dispatch</text>
+
+    <!-- stat 2: RTO Tracking -->
+    <rect x="98" y="155" width="78" height="32" rx="10" fill="#fff" opacity=".1"/>
+    <rect x="98" y="155" width="78" height="32" rx="10" fill="none" stroke="#fff" stroke-width=".5" opacity=".2"/>
+    <text x="108" y="168" font-family="Outfit,sans-serif" font-size="7.5" font-weight="700" fill="#6ee7b7">📷 AWB Scan</text>
+    <text x="108" y="180" font-family="Outfit,sans-serif" font-size="8.5" font-weight="900" fill="#fff">RTO Tracking</text>
+
+    <!-- stat 3: Platforms -->
+    <rect x="182" y="155" width="78" height="32" rx="10" fill="#fff" opacity=".1"/>
+    <rect x="182" y="155" width="78" height="32" rx="10" fill="none" stroke="#fff" stroke-width=".5" opacity=".2"/>
+    <text x="192" y="168" font-family="Outfit,sans-serif" font-size="7.5" font-weight="700" fill="#fcd34d">🛒 3 Platforms</text>
+    <text x="192" y="180" font-family="Outfit,sans-serif" font-size="8.5" font-weight="900" fill="#fff">One Dashboard</text>
+
+    <!-- stat 4: Cloud Sync -->
+    <rect x="266" y="155" width="80" height="32" rx="10" fill="#fff" opacity=".1"/>
+    <rect x="266" y="155" width="80" height="32" rx="10" fill="none" stroke="#fff" stroke-width=".5" opacity=".2"/>
+    <text x="276" y="168" font-family="Outfit,sans-serif" font-size="7.5" font-weight="700" fill="#93c5fd">☁️ Supabase</text>
+    <text x="276" y="180" font-family="Outfit,sans-serif" font-size="8.5" font-weight="900" fill="#fff">Cloud Sync</text>
+
+    <!-- ── CTA BUTTON AREA ── -->
+    <rect x="14" y="194" width="190" height="20" rx="10" fill="#fff" opacity=".13"/>
+    <text x="109" y="208" font-family="Outfit,sans-serif" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="0.3">▶ Start Label Processing</text>
+
+    <!-- version tag -->
+    <text x="345" y="208" font-family="Outfit,sans-serif" font-size="7.5" font-weight="600" fill="#fff" opacity=".4" text-anchor="end">v15.9</text>
+
+    </g>
+  </svg>
+  </div>
+  <!-- ══ /INFOGRAPHIC HERO BANNER ══ -->
+
   <div class="home-tools-section">
-    <div class="home-tools-heading">
-      <span class="ht-line"></span>
-      <span class="ht-label">FEATURED TOOLS</span>
-      <span class="ht-line"></span>
-    </div>
+    <div class="home-tools-heading"><span class="ht-line"></span><span class="ht-label">FEATURED TOOLS</span><span class="ht-line"></span></div>
+    <div class="home-tools-list">
 
-    <!-- Tools: Label Processor, Stock Picker, Stock, Notes & Stats, Report, Scanners, Data Manager, SKU Manager -->
-    <div class="home-tools-list-wrap"><div class="home-tools-list">
-
-      <div class="htc" style="--tc1:#7c3aed;--tc2:#a855f7" onclick="goTo('labelView')">
+      <!-- 1. Label Processor — Purple, document with lines icon -->
+      <div class="htc" onclick="goTo('labelView')">
         <div class="htc-top">
-          <div class="htc-icon" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">
-            <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect x="2" y="4" width="3" height="20" rx="1.2" fill="white"/><rect x="7" y="4" width="1.5" height="20" rx=".6" fill="rgba(255,255,255,.7)"/><rect x="10" y="4" width="3" height="20" rx="1.2" fill="white"/><rect x="15" y="4" width="1.5" height="20" rx=".6" fill="rgba(255,255,255,.7)"/><rect x="18" y="4" width="2" height="20" rx="1" fill="white"/><rect x="22" y="4" width="3" height="20" rx="1.2" fill="white"/><rect x="27" y="4" width="1.5" height="20" rx=".6" fill="rgba(255,255,255,.7)"/></svg>
+          <div class="htc-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+              <rect x="5" y="3" width="14" height="18" rx="2" fill="white" opacity=".9"/>
+              <rect x="7" y="7" width="10" height="1.5" rx=".75" fill="#8b5cf6"/>
+              <rect x="7" y="10" width="8" height="1.5" rx=".75" fill="#8b5cf6" opacity=".7"/>
+              <rect x="7" y="13" width="9" height="1.5" rx=".75" fill="#8b5cf6" opacity=".5"/>
+              <rect x="7" y="16" width="6" height="1.5" rx=".75" fill="#8b5cf6" opacity=".4"/>
+              <rect x="15" y="14" width="8" height="10" rx="2" fill="white" opacity=".75"/>
+              <rect x="16.5" y="16" width="5" height="1.2" rx=".6" fill="#8b5cf6" opacity=".6"/>
+              <rect x="16.5" y="18.5" width="3.5" height="1.2" rx=".6" fill="#8b5cf6" opacity=".4"/>
+            </svg>
           </div>
           <div class="htc-text">
             <div class="htc-title">Label Processor</div>
-            <div class="htc-sub">Multi-PDF · Sort</div>
+            <div class="htc-sub">Sort &amp; Cropped Labels. Multi-PDF channel sorting for bulk dispatch.</div>
           </div>
         </div>
-        <button class="htc-btn">Get Started →</button>
+        <button class="htc-btn" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">Process Labels →</button>
       </div>
 
-      <div class="htc" style="--tc1:#e11d48;--tc2:#be123c" onclick="goTo('pickerView')">
+      <!-- 2. Stock Picker — Dark Green, box with checkmark -->
+      <div class="htc" onclick="goTo('pickerView')">
         <div class="htc-top">
-          <div class="htc-icon" style="background:linear-gradient(135deg,#e11d48,#be123c)">
-            <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect x="4" y="6" width="24" height="20" rx="3" fill="rgba(255,255,255,.2)"/><rect x="8" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".9"/><rect x="18" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".6"/><rect x="8" y="20" width="6" height="4" rx="1" fill="white" opacity=".5"/><rect x="18" y="20" width="6" height="4" rx="1" fill="white" opacity=".4"/><circle cx="11" cy="13" r="1.5" fill="#e11d48"/><text x="19" y="16" font-size="7" fill="#e11d48" font-weight="900">-</text></svg>
+          <div class="htc-icon" style="background:linear-gradient(135deg,#059669,#047857);border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+              <path d="M14 3L24 8V20L14 25L4 20V8Z" fill="white" opacity=".2"/>
+              <path d="M14 3L24 8L14 13L4 8Z" fill="white" opacity=".35"/>
+              <path d="M4 8L14 13V25" stroke="white" stroke-width="1.2" opacity=".5"/>
+              <path d="M24 8L14 13" stroke="white" stroke-width="1.2" opacity=".5"/>
+              <circle cx="20" cy="20" r="6" fill="white"/>
+              <path d="M17 20l2 2 4-4" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </div>
           <div class="htc-text">
             <div class="htc-title">Stock Picker</div>
-            <div class="htc-sub">Dispatch Calc</div>
+            <div class="htc-sub">Optimized Packing Lists. Calculate expected items for efficient picking.</div>
           </div>
         </div>
-        <button class="htc-btn" style="background:linear-gradient(135deg,#e11d48,#be123c)">Get Started →</button>
+        <button class="htc-btn" style="background:linear-gradient(135deg,#059669,#047857)">Pick List →</button>
       </div>
 
-      <div class="htc" style="--tc1:#f59e0b;--tc2:#d97706" onclick="goTo('stockInView')">
+      <!-- 3. In/Out — Orange, circular refresh/sync arrows -->
+      <div class="htc" onclick="goTo('stockInView')">
         <div class="htc-top">
-          <div class="htc-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)">
-            <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect x="4" y="8" width="24" height="18" rx="3" fill="rgba(255,255,255,.25)"/><path d="M16 6v12M10 12l6-6 6 6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="22" width="16" height="2.5" rx="1.2" fill="white" opacity=".8"/></svg>
-          </div>
-          <div class="htc-text">
-            <div class="htc-title">IN/OUT</div>
-            <div class="htc-sub" id="stockInBadge">Rework · Purchase · Outward</div>
-          </div>
-        </div>
-        <button class="htc-btn" style="background:linear-gradient(135deg,#f59e0b,#d97706)">Get Started →</button>
-      </div>
-
-      <div class="htc" style="--tc1:#f43f5e;--tc2:#e879f9" onclick="goTo('notesView')">
-        <div class="htc-top">
-          <div class="htc-icon" style="background:linear-gradient(135deg,#f43f5e,#e879f9)">
-            <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect x="4" y="4" width="24" height="24" rx="5" fill="rgba(255,255,255,.2)"/><rect x="9" y="9" width="14" height="2" rx="1" fill="white"/><rect x="9" y="13" width="10" height="2" rx="1" fill="rgba(255,255,255,.75)"/><rect x="9" y="17" width="12" height="2" rx="1" fill="rgba(255,255,255,.5)"/><circle cx="22" cy="22" r="5" fill="white" opacity=".9"/><line x1="22" y1="19.5" x2="22" y2="24.5" stroke="#f43f5e" stroke-width="1.8" stroke-linecap="round"/><line x1="19.5" y1="22" x2="24.5" y2="22" stroke="#f43f5e" stroke-width="1.8" stroke-linecap="round"/></svg>
-          </div>
-          <div class="htc-text">
-            <div class="htc-title">Notes & Stats</div>
-            <div class="htc-sub" id="notesBadge">Daily tracker · Keep notes</div>
-          </div>
-        </div>
-        <button class="htc-btn" style="background:linear-gradient(135deg,#f43f5e,#e879f9)">Open →</button>
-      </div>
-
-      <div class="htc" style="--tc1:#6366f1;--tc2:#8b5cf6" onclick="goTo('reportView')">
-        <div class="htc-top">
-          <div class="htc-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
-            <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect x="4" y="18" width="5" height="10" rx="1.5" fill="white" opacity=".7"/><rect x="11" y="12" width="5" height="16" rx="1.5" fill="white" opacity=".85"/><rect x="18" y="6" width="5" height="22" rx="1.5" fill="white"/><rect x="25" y="14" width="5" height="14" rx="1.5" fill="white" opacity=".6"/></svg>
-          </div>
-          <div class="htc-text">
-            <div class="htc-title">Report</div>
-            <div class="htc-sub">SKU + Courier</div>
-          </div>
-        </div>
-        <button class="htc-btn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">Get Started →</button>
-      </div>
-
-      <div class="htc" style="--tc1:#2563eb;--tc2:#1d4ed8" onclick="goTo('stockToolView')">
-        <div class="htc-top" style="gap:10px;margin-bottom:8px;justify-content:center">
-          <div class="htc-icon" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M10 2 L17 5.5 L17 13.5 L10 17 L3 13.5 L3 5.5 Z" fill="white" opacity=".9"/>
-              <path d="M10 2 L17 5.5 L10 9 L3 5.5 Z" fill="white" opacity=".5"/>
-              <path d="M10 9 L10 17" stroke="#2563eb" stroke-width="1.2" opacity=".4"/>
+          <div class="htc-icon" style="background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+              <path d="M14 5C9.03 5 5 9.03 5 14s4.03 9 9 9" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M14 23c4.97 0 9-4.03 9-9s-4.03-9-9-9" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M11 2.5L14 5.5L11 8.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17 19.5L14 22.5L17 25.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <div class="htc-text" style="flex:unset">
-            <div class="htc-title">Live Stock</div>
-            <div class="htc-sub">Dashboard se Auto Update</div>
+          <div class="htc-text">
+            <div class="htc-title">In/Out</div>
+            <div class="htc-sub" id="stockInBadge">Stock Ledger. Manage rework, purchases, and outward returns easily.</div>
           </div>
         </div>
-        <button class="htc-btn" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">Get Started →</button>
+        <button class="htc-btn" style="background:linear-gradient(135deg,#f59e0b,#f97316)">Log Txn →</button>
       </div>
 
-      <div class="htc" style="--tc1:#f7971e;--tc2:#ffd200" onclick="goTo('rtoView')">
+      <!-- 4. Scanners — Yellow/Orange, camera scan icon -->
+      <div class="htc" onclick="goTo('rtoView')">
         <div class="htc-top">
-          <div class="htc-icon" style="background:linear-gradient(135deg,#f7971e,#f59e0b)">
-            <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect x="4" y="9" width="17" height="15" rx="2.5" fill="rgba(255,255,255,.9)"/><rect x="7" y="13" width="11" height="2" rx="1" fill="#f7971e"/><rect x="7" y="17" width="7" height="1.5" rx=".7" fill="#f7971e" opacity=".6"/><path d="M25 5 L29 9 L25 13" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M29 9 Q29 3 21 3" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
+          <div class="htc-icon" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+              <rect x="8" y="9" width="12" height="10" rx="3" fill="white" opacity=".9"/>
+              <circle cx="14" cy="14" r="3" fill="#f59e0b"/>
+              <circle cx="14" cy="14" r="1.5" fill="white"/>
+              <path d="M4 10V7a2 2 0 012-2h3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M24 10V7a2 2 0 00-2-2h-3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M4 18v3a2 2 0 002 2h3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M24 18v3a2 2 0 01-2 2h-3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
           </div>
           <div class="htc-text">
             <div class="htc-title">Scanners</div>
-            <div class="htc-sub">Pkt ID · Return · Cancel</div>
+            <div class="htc-sub">RTO &amp; Cancel Track. Bulk scan Packet IDs, returns, and canceled orders instantly.</div>
           </div>
         </div>
-        <button class="htc-btn" style="background:linear-gradient(135deg,#f7971e,#ffd200)">Get Started →</button>
+        <button class="htc-btn" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#7c2d12;">Open Scanners →</button>
       </div>
 
-      <div class="htc" style="--tc1:#059669;--tc2:#047857" onclick="goTo('dataView')">
-        <div class="htc-top" style="gap:10px;margin-bottom:8px;justify-content:center">
-          <div class="htc-icon" style="background:linear-gradient(135deg,#059669,#047857)">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <ellipse cx="10" cy="5" rx="7" ry="2.5" fill="white" opacity=".9"/>
-              <path d="M3 5v4c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5V5" stroke="white" stroke-width="1.5" fill="none" opacity=".75"/>
-              <path d="M3 9v4c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5V9" stroke="white" stroke-width="1.5" fill="none" opacity=".5"/>
-              <path d="M3 13v2.5c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5V13" stroke="white" stroke-width="1.5" fill="none" opacity=".3"/>
+      <!-- 5. Live Stock — Blue, building/chart with bars -->
+      <div class="htc" onclick="goTo('stockToolView')">
+        <div class="htc-top">
+          <div class="htc-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+              <rect x="3" y="14" width="6" height="12" rx="1.5" fill="white" opacity=".6"/>
+              <rect x="11" y="9" width="6" height="17" rx="1.5" fill="white" opacity=".8"/>
+              <rect x="19" y="4" width="6" height="22" rx="1.5" fill="white"/>
+              <path d="M3 22h22" stroke="white" stroke-width="1.2" opacity=".4"/>
+              <path d="M5 17L11 12L17 15L24 7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+              <circle cx="24" cy="7" r="2" fill="white" opacity=".9"/>
             </svg>
           </div>
-          <div class="htc-text" style="flex:unset">
-            <div class="htc-title">Data Manager</div>
-            <div class="htc-sub">Cloud · SKU Mapping</div>
+          <div class="htc-text">
+            <div class="htc-title">Live Stock</div>
+            <div class="htc-sub">Real-Time Stock. Monitor inventory levels, low-stock alerts, and mapping rules.</div>
           </div>
         </div>
-        <button class="htc-btn" style="background:linear-gradient(135deg,#059669,#047857)">Get Started →</button>
+        <button class="htc-btn" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">Check Stock →</button>
       </div>
 
-    </div></div><!-- end tools grid -->
+      <!-- 6. Reports — Purple/Indigo, bar chart -->
+      <div class="htc" onclick="goTo('reportView')">
+        <div class="htc-top">
+          <div class="htc-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+              <rect x="4" y="17" width="4" height="8" rx="1.5" fill="white" opacity=".7"/>
+              <rect x="10" y="12" width="4" height="13" rx="1.5" fill="white" opacity=".85"/>
+              <rect x="16" y="7" width="4" height="18" rx="1.5" fill="white"/>
+              <rect x="22" y="14" width="3" height="11" rx="1.5" fill="white" opacity=".6"/>
+              <path d="M4 24h22" stroke="white" stroke-width="1.2" opacity=".4"/>
+            </svg>
+          </div>
+          <div class="htc-text">
+            <div class="htc-title">Reports</div>
+            <div class="htc-sub">Sales Analytics. View SKU sales, platform breakdown, and channel performance.</div>
+          </div>
+        </div>
+        <button class="htc-btn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">View Reports →</button>
+      </div>
 
+      <!-- 7. Data Manager — Dark Green, database stack -->
+      <div class="htc" onclick="goTo('dataView')">
+        <div class="htc-top">
+          <div class="htc-icon" style="background:linear-gradient(135deg,#059669,#065f46);border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+              <ellipse cx="14" cy="7" rx="8" ry="3" fill="white" opacity=".9"/>
+              <path d="M6 7v4.5c0 1.66 3.58 3 8 3s8-1.34 8-3V7" stroke="white" stroke-width="1.6" fill="none" opacity=".8"/>
+              <path d="M6 11.5v4.5c0 1.66 3.58 3 8 3s8-1.34 8-3v-4.5" stroke="white" stroke-width="1.6" fill="none" opacity=".6"/>
+              <path d="M6 16v4.5c0 1.66 3.58 3 8 3s8-1.34 8-3V16" stroke="white" stroke-width="1.6" fill="none" opacity=".4"/>
+            </svg>
+          </div>
+          <div class="htc-text">
+            <div class="htc-title">Data Manager</div>
+            <div class="htc-sub">Configure Mappings. Centralized SKU mapping and configuration rules.</div>
+          </div>
+        </div>
+        <button class="htc-btn" style="background:linear-gradient(135deg,#059669,#065f46)">Set Mappings →</button>
+      </div>
+
+      <!-- 8. Notes & Stats — Pink/Magenta, notepad + pencil -->
+      <div class="htc" onclick="goTo('notesView')">
+        <div class="htc-top">
+          <div class="htc-icon" style="background:linear-gradient(135deg,#ec4899,#be185d);border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+              <rect x="5" y="4" width="15" height="19" rx="2.5" fill="white" opacity=".9"/>
+              <rect x="8" y="8" width="9" height="1.5" rx=".75" fill="#ec4899"/>
+              <rect x="8" y="11.5" width="7" height="1.5" rx=".75" fill="#ec4899" opacity=".7"/>
+              <rect x="8" y="15" width="8" height="1.5" rx=".75" fill="#ec4899" opacity=".5"/>
+              <rect x="17" y="15" width="7" height="9" rx="2" fill="white" opacity=".8" transform="rotate(-45 17 15)"/>
+              <rect x="19.5" y="12.5" width="3" height="7" rx="1" fill="#ec4899" opacity=".7" transform="rotate(-45 19.5 12.5)"/>
+              <path d="M16 22l-2 2.5.5-3" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="htc-text">
+            <div class="htc-title">Notes &amp; Stats</div>
+            <div class="htc-sub" id="notesBadge">Workspace Tools. Keep daily context, notes, and performance stats.</div>
+          </div>
+        </div>
+        <button class="htc-btn" style="background:linear-gradient(135deg,#ec4899,#be185d)">Open Notes →</button>
+      </div>
+
+
+    </div>
+    <div style="text-align:center;padding:22px 0 4px;font-size:10px;color:#b0aac8;font-family:Outfit,sans-serif;font-weight:600;letter-spacing:.5px;">E-Commerce Toolkit | Centralized Operations Dashboard</div>
   </div>
 
-  <!-- APP INSTALL MARQUEE STRIP - Fixed at bottom -->
-  <div id="installStrip" onclick="triggerInstall()" style="position:fixed;bottom:0;left:0;right:0;z-index:999;background:linear-gradient(135deg,#4c1d95,#7c3aed);padding:0;overflow:hidden;border-top:1px solid rgba(255,255,255,0.15);cursor:pointer;">
+  <div id="installStrip" onclick="triggerInstall()" style="position:fixed;bottom:0;left:0;right:0;z-index:999;background:linear-gradient(135deg,#4c1d95,#7c3aed);overflow:hidden;border-top:1px solid rgba(255,255,255,.15);cursor:pointer;">
     <div style="display:flex;animation:marqueeScroll 20s linear infinite;white-space:nowrap;padding:12px 0;pointer-events:none;">
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fff;padding:0 24px;">📱 App Install Karo aur FREE Mein Use Karo! 👆 TAP HERE</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fbbf24;padding:0 24px;">⚡ Meesho Labels Sort Karo</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fff;padding:0 24px;">🚀 Flipkart &amp; Amazon Support</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fbbf24;padding:0 24px;">✅ Cancel Orders Track Karo</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fff;padding:0 24px;">📊 SKU Reports Generate Karo</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fbbf24;padding:0 24px;">🔥 RTO Management Easy Hua</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fff;padding:0 24px;">📱 App Install Karo aur FREE Mein Use Karo! 👆 TAP HERE</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fbbf24;padding:0 24px;">⚡ Meesho Labels Sort Karo</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fff;padding:0 24px;">🚀 Flipkart &amp; Amazon Support</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fbbf24;padding:0 24px;">✅ Cancel Orders Track Karo</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fff;padding:0 24px;">📊 SKU Reports Generate Karo</span>
-      <span style="font-family:'Outfit','DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fbbf24;padding:0 24px;">🔥 RTO Management Easy Hua</span>
+      <span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:700;color:#fff;padding:0 24px;">&#128241; App Install Karo aur FREE Mein Use Karo! &#128070; TAP HERE</span>
+      <span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:700;color:#fbbf24;padding:0 24px;">&#9889; Meesho Labels Sort Karo</span>
+      <span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:700;color:#fff;padding:0 24px;">&#128640; Flipkart &amp; Amazon Support</span>
+      <span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:700;color:#fbbf24;padding:0 24px;">&#10003; Cancel Orders Track Karo</span>
+      <span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:700;color:#fff;padding:0 24px;">&#128241; App Install Karo aur FREE Mein Use Karo! &#128070; TAP HERE</span>
+      <span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:700;color:#fbbf24;padding:0 24px;">&#9889; Meesho Labels Sort Karo</span>
     </div>
   </div>
 </div>
-
 <!-- ════════════════════════════════════════════ LABEL PROCESSOR ════ -->
 <div id="labelView" class="view tp" style="--c1:#667eea;--c2:#764ba2">
   <div class="th"><div class="th-inner">
@@ -3624,6 +3895,7 @@ function goTo(id){
     stockToolOpenDefault();
     stockToolOpenOverlay();
   }
+  if(id==='homeView'||id==='labelView'||id==='pickerView'){ _updateIbStats(); }
 }
 function pickerShareWhatsApp(){
   const link = 'https://realankitbhardwaj-web.github.io/Seller-Pro/?view=picker';
@@ -3649,7 +3921,40 @@ function goHome(){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('homeView').classList.add('active');
   window.scrollTo(0,0);
+  _updateIbStats();
 }
+// ── Infographic Banner: live stat pills update ──
+function _updateIbStats(){
+  try{
+    const oEl = document.getElementById('ibStatOrders');
+    const sEl = document.getElementById('ibStatStock');
+    // Orders count
+    if(oEl){
+      let cnt = 0;
+      if(typeof lOrders !== 'undefined' && lOrders.length){
+        const todayIST = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toISOString().slice(0,10);
+        cnt = lOrders.filter(r=>{ const d=r.date||r.created_at||r.orderDate||''; return d&&d.slice(0,10)===todayIST; }).length;
+        if(!cnt) cnt = lOrders.length;
+      }
+      oEl.textContent = cnt || '—';
+    }
+    // Stock qty
+    if(sEl){
+      let qty = 0;
+      if(typeof _siEntries !== 'undefined' && _siEntries.length){
+        _siEntries.forEach(e=>{
+          const q=parseInt(e.qty||e.quantity||0);
+          const t=(e.type||'').toLowerCase();
+          if(t==='out'||t==='return'||t==='dispatch') qty-=q; else qty+=q;
+        });
+        qty=Math.max(0,qty);
+      }
+      sEl.textContent = qty || '—';
+    }
+  }catch(e){}
+}
+window.addEventListener('load',()=>setTimeout(_updateIbStats,1500));
+
 function toggleDark(){
   const isDark=document.body.classList.toggle('dark');
   document.querySelectorAll('.dm-btn').forEach(b=>{
@@ -5234,6 +5539,47 @@ async function supabasePing(){
   }catch(e){
   }
 }
+// ── GUIDE CAROUSEL (purple banner) ──
+let _guideIdx=0,_guideTimer=null;
+const _GUIDE_TOTAL=5;
+function guideGo(idx){
+  const slides=document.querySelectorAll('.gslide');
+  const dots=document.querySelectorAll('.gdot');
+  if(!slides.length)return;
+  slides.forEach(s=>{s.style.display='none';s.classList.remove('active');});
+  dots.forEach((d,i)=>{
+    d.style.width=i===idx?'16px':'6px';
+    d.style.background=i===idx?'#fff':'rgba(255,255,255,.4)';
+  });
+  _guideIdx=(idx+_GUIDE_TOTAL)%_GUIDE_TOTAL;
+  slides[_guideIdx].style.display='block';
+  slides[_guideIdx].classList.add('active');
+}
+function guideNext(){guideGo(_guideIdx+1);}
+function guidePrev(){guideGo(_guideIdx-1);}
+function guideStart(){
+  clearInterval(_guideTimer);
+  _guideTimer=setInterval(guideNext,4000);
+}
+document.addEventListener('DOMContentLoaded',()=>{guideStart();});
+// ── CAROUSEL ──
+let _carouselIdx=0,_carouselTimer=null;
+function carouselGo(idx){
+  const slides=document.querySelectorAll('.carousel-slide');
+  const dots=document.querySelectorAll('.carousel-dot');
+  if(!slides.length)return;
+  slides.forEach(s=>s.classList.remove('active'));
+  dots.forEach(d=>d.classList.remove('active'));
+  _carouselIdx=idx%slides.length;
+  slides[_carouselIdx].classList.add('active');
+  if(dots[_carouselIdx])dots[_carouselIdx].classList.add('active');
+}
+function carouselNext(){carouselGo(_carouselIdx+1);}
+function carouselStart(){
+  clearInterval(_carouselTimer);
+  _carouselTimer=setInterval(carouselNext,3500);
+}
+document.addEventListener('DOMContentLoaded',()=>{carouselStart();});
 function updateHomeStats(){
   const dispEl=document.getElementById('hTotalDisp');
   const cancelEl=document.getElementById('hTotalCancel');
@@ -5243,6 +5589,15 @@ function updateHomeStats(){
   if(dispEl)dispEl.textContent=disp;
   if(cancelEl)cancelEl.textContent=cancel;
   if(netEl)netEl.textContent=disp-cancel;
+  // Stats strip
+  const o=document.getElementById('hssOrders');
+  const c=document.getElementById('hssCancels');
+  const r=document.getElementById('hssReturns');
+  const s=document.getElementById('hssStock');
+  if(o)o.textContent=lOrders.length||'—';
+  if(c)c.textContent=cancelList.filter(x=>!x.found).length||'—';
+  if(r)r.textContent=returnList.length||'—';
+  if(s)s.textContent=Object.keys(skuMaster||{}).length||'—';
 }
 window.addEventListener('load',async()=>{
   showStorageMode();
