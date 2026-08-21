@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profit/Margin — Seller Pro</title>
+<style>
+  :root{--accent:#7c3aed;--accent2:#4c1d95;--bad:#dc2626;--ok:#16a34a;}
+  *{box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif;}
+  body{margin:0;background:#f3f0ff;color:#1e1b2e;padding:16px;padding-bottom:60px;}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .top a{color:var(--accent);text-decoration:none;font-weight:700;font-size:14px;}
+  h1{font-size:20px;margin:0 0 4px;}
+  .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 10px rgba(124,58,237,.08);}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+  input,select{padding:8px;border-radius:8px;border:1.5px solid #ddd6fe;font-size:13px;}
+  input.num{width:90px;}
+  button{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;}
+  button.sm{padding:6px 10px;font-size:11px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{background:#f5f3ff;text-align:left;padding:7px 8px;position:sticky;top:0;}
+  td{padding:6px 8px;border-bottom:1px solid #f1f0fb;}
+  .profit-pos{color:var(--ok);font-weight:800;}
+  .profit-neg{color:var(--bad);font-weight:800;}
+  .note{font-size:11.5px;color:#7c7c8a;margin-top:6px;line-height:1.5;}
+  .scroll{overflow-x:auto;max-height:70vh;overflow-y:auto;}
+  .totalbar{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;font-weight:700;margin-bottom:10px;}
+  .totalbar div{background:#f5f3ff;padding:8px 12px;border-radius:10px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Seller Pro</a></div>
+<h1>💰 Profit / Margin per SKU</h1>
+<div class="note">Har SKU ki cost price + selling price ek baar set karo — phir kisi bhi date range ka asli profit (returns/cancels ka loss minus karke) dikhega.</div>
+
+<div class="card">
+  <div class="row"><b>Step 1 — Prices Set Karo</b></div>
+  <div class="row">
+    <button onclick="loadSkus()">🔄 SKU List Load Karo</button>
+    <button onclick="savePrices()" id="saveBtn" style="display:none">💾 Prices Save Karo</button>
+  </div>
+  <div class="scroll" id="priceListWrap" style="display:none">
+    <table><thead><tr><th>SKU / Product</th><th>Cost ₹</th><th>Selling ₹</th></tr></thead><tbody id="priceTb"></tbody></table>
+  </div>
+  <div class="note" id="priceStatus"></div>
+</div>
+
+<div class="card">
+  <div class="row"><b>Step 2 — Profit Report</b></div>
+  <div class="row">
+    <input type="date" id="dFrom"><span>se</span><input type="date" id="dTo">
+    <button onclick="runReport()">📊 Report Banao</button>
+  </div>
+  <div class="totalbar" id="totals" style="display:none"></div>
+  <div class="scroll" id="reportWrap" style="display:none">
+    <table><thead><tr><th>SKU/Product</th><th>Orders</th><th>Cancel+Return</th><th>Revenue</th><th>COGS</th><th>Loss (C+R)</th><th>Net Profit</th></tr></thead><tbody id="reportTb"></tbody></table>
+  </div>
+  <div class="note" id="reportStatus">Pehle upar SKU prices set karo, phir date range choose karke report banao.</div>
+</div>
+
+<script src="shared-config.js"></script>
+<script>
+let _skuPrices={}; // sku -> {cost, sell}
+let _skuList=[];
+
+function getTodayStr(){ const d=new Date(Date.now()+5.5*3600*1000); return d.toISOString().slice(0,10); }
+(function initDates(){
+  const to=getTodayStr();
+  const fromD=new Date(Date.now()+5.5*3600*1000 - 30*86400000);
+  document.getElementById('dTo').value=to;
+  document.getElementById('dFrom').value=fromD.toISOString().slice(0,10);
+})();
+
+async function loadSkus(){
+  document.getElementById('priceStatus').textContent='⏳ Load ho raha hai...';
+  // sku_master se product list, aur sku_cost_price se saved prices
+  const [master, prices] = await Promise.all([
+    sbGetAll('sku_master','sku,product'),
+    sbGetAll('sku_cost_price','sku,cost_price,selling_price')
+  ]);
+  if(master===null && prices===null){
+    document.getElementById('priceStatus').innerHTML='❌ Cloud se data nahi mila. Agar pehli baar hai, ye table Supabase mein banao:<br><code style="font-size:10px;background:#f5f3ff;padding:6px;display:block;border-radius:6px;margin-top:6px;white-space:pre-wrap">create table sku_cost_price (\n  sku text primary key,\n  cost_price numeric,\n  selling_price numeric\n);\nalter table sku_cost_price enable row level security;\ncreate policy "anon full access" on sku_cost_price for all using (true) with check (true);</code>';
+    return;
+  }
+  _skuPrices={};
+  (prices||[]).forEach(p=>{ _skuPrices[p.sku]={cost:p.cost_price||0, sell:p.selling_price||0}; });
+  const seen=new Set();
+  _skuList=[];
+  (master||[]).forEach(m=>{ if(m.sku && !seen.has(m.sku)){ seen.add(m.sku); _skuList.push({sku:m.sku, product:m.product||m.sku}); } });
+  if(!_skuList.length){
+    document.getElementById('priceStatus').textContent='❌ Koi SKU nahi mila sku_master mein.';
+    return;
+  }
+  document.getElementById('priceListWrap').style.display='block';
+  document.getElementById('saveBtn').style.display='inline-block';
+  document.getElementById('priceTb').innerHTML=_skuList.map(s=>{
+    const p=_skuPrices[s.sku]||{cost:0,sell:0};
+    return '<tr><td>'+esc(s.product)+'<br><span style="color:#999;font-size:10px">'+esc(s.sku)+'</span></td>'+
+      '<td><input class="num" type="number" step="0.01" data-sku="'+esc(s.sku)+'" data-f="cost" value="'+(p.cost||'')+'"></td>'+
+      '<td><input class="num" type="number" step="0.01" data-sku="'+esc(s.sku)+'" data-f="sell" value="'+(p.sell||'')+'"></td></tr>';
+  }).join('');
+  document.getElementById('priceStatus').textContent=_skuList.length+' SKUs mile. Price bharo aur "Prices Save Karo" dabao.';
+}
+
+async function savePrices(){
+  const inputs=document.querySelectorAll('#priceTb input');
+  const bySku={};
+  inputs.forEach(inp=>{
+    const sku=inp.dataset.sku, f=inp.dataset.f, v=parseFloat(inp.value)||0;
+    if(!bySku[sku]) bySku[sku]={sku};
+    bySku[sku][f==='cost'?'cost_price':'selling_price']=v;
+  });
+  const rows=Object.values(bySku).filter(r=>r.cost_price||r.selling_price);
+  if(!rows.length){ document.getElementById('priceStatus').textContent='Kuch bhi bharo pehle.'; return; }
+  document.getElementById('priceStatus').textContent='⏳ Save ho raha hai...';
+  const ok=await sbReq('POST','sku_cost_price',rows,'on_conflict=sku');
+  document.getElementById('priceStatus').textContent = ok ? ('✅ '+rows.length+' SKU prices save ho gaye!') : '❌ Save fail — pehle upar wali SQL Supabase mein chala ke table banao.';
+  if(ok){ rows.forEach(r=>{ _skuPrices[r.sku]={cost:r.cost_price||0, sell:r.selling_price||0}; }); }
+}
+
+async function runReport(){
+  const from=document.getElementById('dFrom').value, to=document.getElementById('dTo').value;
+  if(!from||!to){alert('Dates choose karo');return;}
+  if(!Object.keys(_skuPrices).length){
+    const ok=confirm('Prices load nahi hain. Pehle "SKU List Load Karo" dabana chahiye. Abhi bhi try karu?');
+    if(!ok) return;
+  }
+  document.getElementById('reportStatus').textContent='⏳ Data la rahe hain...';
+  const filt='date=gte.'+from+'&date=lte.'+to;
+  const [orders,cancels,returns]=await Promise.all([
+    sbGetAll('orders','sku,qty,product_name',filt),
+    sbGetAll('cancels','sku,qty,product_name',filt),
+    sbGetAll('returns','sku,qty,product_name',filt)
+  ]);
+  if(!orders.length){ document.getElementById('reportStatus').textContent='❌ Is range mein orders nahi mile.'; document.getElementById('reportWrap').style.display='none'; document.getElementById('totals').style.display='none'; return; }
+  const stats={};
+  const bump=(rows,field)=>rows.forEach(r=>{
+    const key=r.sku||r.product_name||'—';
+    if(!stats[key]) stats[key]={product:r.product_name||key,sku:key,orders:0,badQty:0,qtySold:0};
+    const qty=r.qty||1;
+    if(field==='orders'){ stats[key].orders++; stats[key].qtySold+=qty; }
+    else { stats[key].badQty+=qty; }
+  });
+  bump(orders,'orders'); bump(cancels,'bad'); bump(returns,'bad');
+
+  let totRevenue=0, totCogs=0, totLoss=0, totProfit=0;
+  const rows=Object.values(stats).map(s=>{
+    const price=_skuPrices[s.sku]||{cost:0,sell:0};
+    const revenue = s.qtySold * price.sell;
+    const cogs = s.qtySold * price.cost;
+    const loss = s.badQty * price.cost; // return/cancel hue items ka cost sunk maan rahe hain
+    const netProfit = revenue - cogs - loss;
+    totRevenue+=revenue; totCogs+=cogs; totLoss+=loss; totProfit+=netProfit;
+    return {...s, revenue, cogs, loss, netProfit};
+  }).sort((a,b)=>a.netProfit-b.netProfit);
+
+  document.getElementById('totals').style.display='flex';
+  document.getElementById('totals').innerHTML=
+    '<div>Revenue: ₹'+totRevenue.toFixed(0)+'</div>'+
+    '<div>COGS: ₹'+totCogs.toFixed(0)+'</div>'+
+    '<div>Return/Cancel Loss: ₹'+totLoss.toFixed(0)+'</div>'+
+    '<div class="'+(totProfit>=0?'profit-pos':'profit-neg')+'">Net Profit: ₹'+totProfit.toFixed(0)+'</div>';
+
+  document.getElementById('reportWrap').style.display='block';
+  document.getElementById('reportTb').innerHTML=rows.map(r=>{
+    const cls=r.netProfit>=0?'profit-pos':'profit-neg';
+    const hasPrice=(_skuPrices[r.sku]&&(_skuPrices[r.sku].cost||_skuPrices[r.sku].sell));
+    return '<tr><td>'+esc(r.product)+(hasPrice?'':' <span style="color:#f59e0b;font-size:10px">⚠️ price missing</span>')+'</td><td>'+r.orders+'</td><td>'+r.badQty+'</td><td>₹'+r.revenue.toFixed(0)+'</td><td>₹'+r.cogs.toFixed(0)+'</td><td>₹'+r.loss.toFixed(0)+'</td><td class="'+cls+'">₹'+r.netProfit.toFixed(0)+'</td></tr>';
+  }).join('');
+  document.getElementById('reportStatus').textContent='⚠️ price missing wale SKUs ke liye upar price set karo, warna unka profit ₹0 dikhega.';
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+</script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stockout Prediction — Seller Pro</title>
+<style>
+  :root{--accent:#7c3aed;--accent2:#4c1d95;--bad:#dc2626;--warn:#f59e0b;--ok:#16a34a;}
+  *{box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif;}
+  body{margin:0;background:#f3f0ff;color:#1e1b2e;padding:16px;padding-bottom:60px;}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .top a{color:var(--accent);text-decoration:none;font-weight:700;font-size:14px;}
+  h1{font-size:20px;margin:0 0 4px;}
+  .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 10px rgba(124,58,237,.08);}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+  input[type=number]{width:70px;padding:8px;border-radius:8px;border:1.5px solid #ddd6fe;font-size:13px;}
+  button{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{background:#f5f3ff;text-align:left;padding:7px 8px;position:sticky;top:0;}
+  td{padding:7px 8px;border-bottom:1px solid #f1f0fb;}
+  .d-bad{color:var(--bad);font-weight:800;}
+  .d-warn{color:var(--warn);font-weight:800;}
+  .d-ok{color:var(--ok);font-weight:700;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:800;}
+  .badge.high{background:#fee2e2;color:var(--bad);}
+  .badge.mid{background:#fef3c7;color:#b45309;}
+  .empty{text-align:center;color:#999;padding:30px;font-size:13px;}
+  .note{font-size:11.5px;color:#7c7c8a;margin-top:6px;}
+  .scroll{overflow-x:auto;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Seller Pro</a></div>
+<h1>⏳ Stockout Prediction</h1>
+<div class="note">Stock tool ke existing daily data (opening stock + purchase + rework − dispatch) se calculate karta hai ki har product kitne din mein khatam ho jayega.</div>
+
+<div class="card">
+  <div class="row">
+    <label>Alert threshold: </label><input type="number" id="threshold" value="5"><label>din se kam</label>
+    <label style="margin-left:10px">Average nikalne ke liye last</label><input type="number" id="lookback" value="14"><label>din</label>
+    <button onclick="loadData()">🔍 Check Karo</button>
+  </div>
+</div>
+
+<div class="card" id="resultCard" style="display:none">
+  <div class="scroll"><table><thead><tr><th>Product</th><th>Current Stock</th><th>Avg/Day (last N din)</th><th>Days Left</th></tr></thead><tbody id="tb"></tbody></table></div>
+</div>
+<div class="card empty" id="emptyState">"Check Karo" dabao.</div>
+
+<script src="shared-config.js"></script>
+<script>
+function getTodayStr(){ const d=new Date(Date.now()+5.5*3600*1000); return d.toISOString().slice(0,10); }
+
+function monthKeysBack(n){
+  // pichle 2 mahine ke month_keys (current stock ke liye kaafi hai kyunki humesha carry-forward hota hai)
+  const keys=[];
+  const d=new Date(Date.now()+5.5*3600*1000);
+  for(let i=0;i<2;i++){
+    const dt=new Date(d.getFullYear(), d.getMonth()-i, 1);
+    keys.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0'));
+  }
+  return keys;
+}
+
+async function loadData(){
+  const threshold=parseInt(document.getElementById('threshold').value)||5;
+  const lookback=parseInt(document.getElementById('lookback').value)||14;
+  document.getElementById('emptyState').textContent='⏳ Data la rahe hain...';
+  document.getElementById('emptyState').style.display='block';
+  document.getElementById('resultCard').style.display='none';
+
+  const master = await sbGetAll('live_stock_master','product,opening_stock');
+  if(!master || !master.length){
+    document.getElementById('emptyState').textContent='❌ live_stock_master mein data nahi mila. Pehle Stock tool se ek din ka data cloud pe save karo.';
+    return;
+  }
+  const monthKeys=monthKeysBack(2);
+  let daily=[];
+  for(const mk of monthKeys){
+    const rows=await sbGetAll('live_stock_daily','product,month_key,day,dispatch,rework,purchase','month_key=eq.'+mk);
+    daily=daily.concat(rows);
+  }
+  if(!daily.length){
+    document.getElementById('emptyState').textContent='❌ live_stock_daily mein data nahi mila.';
+    return;
+  }
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('resultCard').style.display='block';
+
+  // Current stock = opening_stock + sum(purchase+rework) - sum(dispatch), sab dates milaake
+  // Avg/day dispatch = last N din ka average dispatch (sabse recent N entries by date, roughly by day-of-month + month recency)
+  const byProduct={};
+  master.forEach(m=>{ byProduct[m.product]={ opening:m.opening_stock||0, totalPurchase:0, totalRework:0, totalDispatch:0, recentDispatch:[] }; });
+  // Sort daily by (month_key, day) so "recent" trimming works
+  daily.sort((a,b)=> (a.month_key+String(a.day).padStart(2,'0')).localeCompare(b.month_key+String(b.day).padStart(2,'0')));
+  daily.forEach(r=>{
+    if(!byProduct[r.product]) byProduct[r.product]={opening:0,totalPurchase:0,totalRework:0,totalDispatch:0,recentDispatch:[]};
+    const p=byProduct[r.product];
+    p.totalPurchase+=(r.purchase||0);
+    p.totalRework+=(r.rework||0);
+    p.totalDispatch+=(r.dispatch||0);
+    p.recentDispatch.push(r.dispatch||0);
+  });
+
+  const rows=Object.keys(byProduct).map(product=>{
+    const p=byProduct[product];
+    const currentStock = p.opening + p.totalPurchase + p.totalRework - p.totalDispatch;
+    const recent=p.recentDispatch.slice(-lookback);
+    const avgDaily = recent.length ? (recent.reduce((a,b)=>a+b,0)/recent.length) : 0;
+    const daysLeft = avgDaily>0 ? (currentStock/avgDaily) : (currentStock>0?Infinity:0);
+    return {product, currentStock, avgDaily, daysLeft};
+  }).filter(r=>r.currentStock>=0 || r.avgDaily>0)
+    .sort((a,b)=>a.daysLeft-b.daysLeft);
+
+  document.getElementById('tb').innerHTML=rows.map(r=>{
+    let cls='d-ok', badge='';
+    const dl = isFinite(r.daysLeft) ? r.daysLeft : 9999;
+    if(dl < threshold){ cls='d-bad'; badge='<span class="badge high">🔴 URGENT</span>'; }
+    else if(dl < threshold*2){ cls='d-warn'; badge='<span class="badge mid">🟡 WATCH</span>'; }
+    return '<tr><td>'+esc(r.product)+' '+badge+'</td><td>'+r.currentStock.toFixed(0)+'</td><td>'+r.avgDaily.toFixed(1)+'</td><td class="'+cls+'">'+(isFinite(r.daysLeft)?r.daysLeft.toFixed(1)+' din':'∞ (bik hi nahi raha)')+'</td></tr>';
+  }).join('');
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+</script>
+</body>
+</html>

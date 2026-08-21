@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Return Evidence — Seller Pro</title>
+<style>
+  :root{--accent:#7c3aed;--accent2:#4c1d95;}
+  *{box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif;}
+  body{margin:0;background:#f3f0ff;color:#1e1b2e;padding:16px;padding-bottom:60px;}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .top a{color:var(--accent);text-decoration:none;font-weight:700;font-size:14px;}
+  h1{font-size:20px;margin:0 0 4px;}
+  .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 10px rgba(124,58,237,.08);}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+  input{padding:9px;border-radius:8px;border:1.5px solid #ddd6fe;font-size:14px;flex:1;min-width:150px;}
+  button{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;}
+  button.gray{background:#ede9fe;color:var(--accent2);}
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .thumb{width:70px;height:70px;border-radius:8px;overflow:hidden;position:relative;background:#f5f3ff;}
+  .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;}
+  .thumb .del{position:absolute;top:2px;right:2px;background:rgba(220,38,38,.9);color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;line-height:18px;text-align:center;cursor:pointer;}
+  .list-item{padding:10px;border:1.5px solid #f1f0fb;border-radius:10px;margin-bottom:8px;}
+  .list-item .hdr{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13px;}
+  .note{font-size:11.5px;color:#7c7c8a;margin-top:6px;line-height:1.5;}
+  .empty{text-align:center;color:#999;padding:20px;font-size:13px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Seller Pro</a></div>
+<h1>📸 Return Evidence Pack</h1>
+<div class="note">Return khulte waqt photo/video lo — AWB se linked, phone ki memory me ek alag folder-jaisi jagah save hoga ("SellerPro_Evidence" downloads), aur ek claim-ready PDF ban jayega. <b>Abhi sirf isی phone pe rahega — future mein Supabase pe bhi save hoga.</b></div>
+
+<div class="card">
+  <div class="row">
+    <input id="awbInput" placeholder="AWB number daalo">
+    <button onclick="startCapture()">📷 Photo/Video Lo</button>
+  </div>
+  <input type="file" id="fileInput" accept="image/*,video/*" capture="environment" multiple style="display:none" onchange="onFilesSelected(event)">
+  <div class="thumbs" id="pendingThumbs"></div>
+  <div class="row" id="pendingActions" style="display:none">
+    <button onclick="savePendingEvidence()">💾 AWB ke saath Save Karo</button>
+    <button class="gray" onclick="clearPending()">❌ Cancel</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="row"><b>Saved Evidence (isी phone pe)</b> <button class="gray" onclick="loadSaved()">🔄 Refresh</button></div>
+  <div id="savedList"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const DB_NAME='seller_pro_evidence', STORE='evidence';
+let _pendingFiles=[];
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains(STORE)){
+        db.createObjectStore(STORE,{keyPath:'id',autoIncrement:true});
+      }
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function dbAdd(rec){ const db=await openDB(); return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).add(rec); tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error); }); }
+async function dbAll(){ const db=await openDB(); return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readonly'); const req=tx.objectStore(STORE).getAll(); req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error); }); }
+async function dbDelete(id){ const db=await openDB(); return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).delete(id); tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error); }); }
+
+function startCapture(){
+  const awb=document.getElementById('awbInput').value.trim();
+  if(!awb){ alert('Pehle AWB number daalo'); return; }
+  document.getElementById('fileInput').click();
+}
+function onFilesSelected(e){
+  const files=Array.from(e.target.files||[]);
+  _pendingFiles=_pendingFiles.concat(files);
+  renderPending();
+  e.target.value='';
+}
+function renderPending(){
+  const wrap=document.getElementById('pendingThumbs');
+  wrap.innerHTML='';
+  _pendingFiles.forEach((f,i)=>{
+    const url=URL.createObjectURL(f);
+    const div=document.createElement('div'); div.className='thumb';
+    const el=f.type.startsWith('video')?document.createElement('video'):document.createElement('img');
+    el.src=url; if(el.tagName==='VIDEO') el.muted=true;
+    const del=document.createElement('div'); del.className='del'; del.textContent='✕';
+    del.onclick=()=>{ _pendingFiles.splice(i,1); renderPending(); };
+    div.appendChild(el); div.appendChild(del);
+    wrap.appendChild(div);
+  });
+  document.getElementById('pendingActions').style.display=_pendingFiles.length?'flex':'none';
+}
+function clearPending(){ _pendingFiles=[]; renderPending(); }
+
+async function savePendingEvidence(){
+  const awb=document.getElementById('awbInput').value.trim();
+  if(!awb||!_pendingFiles.length) return;
+  const ts=new Date().toISOString();
+  for(const f of _pendingFiles){
+    const buf=await f.arrayBuffer();
+    await dbAdd({awb, ts, type:f.type, name:f.name||('evidence_'+Date.now()), blob:new Blob([buf],{type:f.type})});
+    // Phone ki memory me bhi real file ke roop me save (Downloads folder, "SellerPro_Evidence_" prefix se
+    // taaki file manager mein ek pehchane jaane wale naam se dikhe — asli custom folder web se nahi bana sakte,
+    // ye download-based tareeka hai jo Android/iOS dono par kaam karta hai).
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(f);
+    const ext=(f.type.split('/')[1]||'jpg').split(';')[0];
+    a.download='SellerPro_Evidence_'+awb+'_'+Date.now()+'.'+ext;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  clearPending();
+  document.getElementById('awbInput').value='';
+  alert('✅ Evidence save ho gaya — phone ke Downloads folder mein "SellerPro_Evidence_'+awb+'..." naam se milega.');
+  loadSaved();
+}
+
+async function loadSaved(){
+  const all=await dbAll();
+  const wrap=document.getElementById('savedList');
+  if(!all.length){ wrap.innerHTML='<div class="empty">Abhi koi evidence saved nahi hai.</div>'; return; }
+  const byAwb={};
+  all.forEach(r=>{ if(!byAwb[r.awb]) byAwb[r.awb]=[]; byAwb[r.awb].push(r); });
+  wrap.innerHTML='';
+  Object.keys(byAwb).forEach(awb=>{
+    const items=byAwb[awb];
+    const div=document.createElement('div'); div.className='list-item';
+    div.innerHTML='<div class="hdr"><span>AWB: '+esc(awb)+' ('+items.length+' files)</span></div>';
+    const thumbs=document.createElement('div'); thumbs.className='thumbs';
+    items.forEach(r=>{
+      const url=URL.createObjectURL(r.blob);
+      const t=document.createElement('div'); t.className='thumb';
+      const el=r.type.startsWith('video')?document.createElement('video'):document.createElement('img');
+      el.src=url; if(el.tagName==='VIDEO') el.muted=true;
+      const del=document.createElement('div'); del.className='del'; del.textContent='✕';
+      del.onclick=async()=>{ await dbDelete(r.id); loadSaved(); };
+      t.appendChild(el); t.appendChild(del);
+      thumbs.appendChild(t);
+    });
+    div.appendChild(thumbs);
+    const btn=document.createElement('button');
+    btn.textContent='📄 Claim PDF Banao'; btn.style.marginTop='8px'; btn.style.fontSize='11px'; btn.style.padding='7px 10px';
+    btn.onclick=()=>generatePdf(awb, items);
+    div.appendChild(btn);
+    wrap.appendChild(div);
+  });
+}
+
+async function generatePdf(awb, items){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(16); doc.text('Return Evidence — AWB: '+awb, 10, 15);
+  doc.setFontSize(10); doc.text('Generated: '+new Date().toLocaleString('en-IN'), 10, 22);
+  let y=30;
+  for(const r of items){
+    if(r.type.startsWith('image')){
+      const dataUrl=await blobToDataUrl(r.blob);
+      if(y>250){ doc.addPage(); y=15; }
+      try{ doc.addImage(dataUrl, 'JPEG', 10, y, 80, 80); }catch(e){}
+      y+=90;
+    } else {
+      if(y>270){ doc.addPage(); y=15; }
+      doc.setFontSize(10); doc.text('🎥 Video file: '+r.name+' (dekhne ke liye app mein khulega, PDF mein embed nahi hota)', 10, y);
+      y+=10;
+    }
+  }
+  doc.save('Evidence_'+awb+'.pdf');
+}
+function blobToDataUrl(blob){ return new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(blob); }); }
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+loadSaved();
+</script>
+</body>
+</html>
