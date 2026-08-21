@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Packaging Marketplace — Seller Pro</title>
+<style>
+  :root{--accent:#7c3aed;--accent2:#4c1d95;}
+  *{box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif;}
+  body{margin:0;background:#f3f0ff;color:#1e1b2e;padding:16px;padding-bottom:80px;}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .top a{color:var(--accent);text-decoration:none;font-weight:700;font-size:14px;}
+  h1{font-size:20px;margin:0 0 4px;}
+  .note{font-size:11.5px;color:#7c7c8a;margin-bottom:14px;line-height:1.5;}
+  .cat{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 10px rgba(124,58,237,.08);}
+  .cat-title{font-weight:800;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f1f0fb;}
+  .item:last-child{border-bottom:none;}
+  .item-name{font-size:12.5px;flex:1;}
+  .item input{width:64px;padding:7px;border-radius:8px;border:1.5px solid #ddd6fe;font-size:13px;text-align:center;}
+  .fab{position:fixed;bottom:14px;left:16px;right:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:14px;padding:14px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(124,58,237,.35);}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Seller Pro</a></div>
+<h1>📦 Packaging Marketplace</h1>
+<div class="note">Jo bhi packaging material chahiye uski qty daalo — neeche "Order List Bhejo" dabane se WhatsApp pe ready-made order message ban jayega apne supplier ko bhejने ke liye.</div>
+
+<div id="catalog"></div>
+
+<button class="fab" onclick="sendOrder()">📤 Order List Bhejo (WhatsApp)</button>
+
+<script>
+const CATALOG = [
+  { cat: '🧾 Thermal Roll', items: [
+    '75x125 mm Thermal Roll',
+    '100x100 mm Thermal Roll',
+    '100x150 mm Thermal Roll'
+  ]},
+  { cat: '🖨️ Thermal Ink Ribbon', items: [
+    'Thermal Ink Ribbon (Wax)',
+    'Thermal Ink Ribbon (Wax-Resin)'
+  ]},
+  { cat: '🎗️ Tape', items: [
+    '2 inch Cello Tape',
+    '2 inch Brown Tape',
+    'Flipkart Branding Tape',
+    'Amazon Branding Tape'
+  ]},
+  { cat: '🛍️ Polybags — Meesho', items: [
+    'Meesho Polybag - Small',
+    'Meesho Polybag - Medium',
+    'Meesho Polybag - Large'
+  ]},
+  { cat: '🛍️ Polybags — Flipkart', items: [
+    'Flipkart Polybag - Small',
+    'Flipkart Polybag - Medium',
+    'Flipkart Polybag - Large'
+  ]},
+  { cat: '🛍️ Polybags — Amazon', items: [
+    'Amazon Polybag - Small',
+    'Amazon Polybag - Medium',
+    'Amazon Polybag - Large'
+  ]}
+];
+
+function render(){
+  const wrap=document.getElementById('catalog');
+  wrap.innerHTML = CATALOG.map((c,ci)=>(
+    '<div class="cat"><div class="cat-title">'+c.cat+'</div>' +
+    c.items.map((it,ii)=>(
+      '<div class="item"><span class="item-name">'+it+'</span>' +
+      '<input type="number" min="0" placeholder="0" id="q_'+ci+'_'+ii+'" data-name="'+it.replace(/"/g,'&quot;')+'"></div>'
+    )).join('') +
+    '</div>'
+  )).join('');
+}
+render();
+
+function sendOrder(){
+  const inputs=document.querySelectorAll('#catalog input');
+  const lines=[];
+  inputs.forEach(inp=>{
+    const qty=parseInt(inp.value)||0;
+    if(qty>0) lines.push('• '+inp.dataset.name+' — '+qty+' units');
+  });
+  if(!lines.length){ alert('Pehle kam se kam ek item ki qty daalo'); return; }
+  const msg = 'Packaging Order:\n\n' + lines.join('\n') + '\n\n— Seller Pro se bheja gaya';
+  const waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
+  window.open(waUrl, '_blank');
+}
+</script>
+</body>
+</html>
