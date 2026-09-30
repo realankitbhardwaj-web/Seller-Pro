@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTO/Return Pattern — Seller Pro</title>
+<style>
+  :root{--accent:#7c3aed;--accent2:#4c1d95;--bad:#dc2626;--warn:#f59e0b;--ok:#16a34a;}
+  *{box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif;}
+  body{margin:0;background:#f3f0ff;color:#1e1b2e;padding:16px;padding-bottom:60px;}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .top a{color:var(--accent);text-decoration:none;font-weight:700;font-size:14px;}
+  h1{font-size:20px;margin:0;}
+  .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 10px rgba(124,58,237,.08);}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+  input[type=date],input[type=number]{padding:8px;border-radius:8px;border:1.5px solid #ddd6fe;font-size:13px;}
+  input[type=number]{width:64px;}
+  select{padding:8px;border-radius:8px;border:1.5px solid #ddd6fe;font-size:13px;}
+  button{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;}
+  .toggle{display:flex;border:1.5px solid #ddd6fe;border-radius:9px;overflow:hidden}
+  .toggle button{background:#fff;color:var(--accent);border-radius:0;padding:8px 14px;font-size:12.5px}
+  .toggle button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{background:#f5f3ff;text-align:left;padding:7px 8px;position:sticky;top:0;}
+  td{padding:7px 8px;border-bottom:1px solid #f1f0fb;}
+  .rate-bad{color:var(--bad);font-weight:800;}
+  .rate-warn{color:var(--warn);font-weight:800;}
+  .rate-ok{color:var(--ok);font-weight:700;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:800;}
+  .badge.high{background:#fee2e2;color:var(--bad);}
+  .badge.mid{background:#fef3c7;color:#b45309;}
+  .empty{text-align:center;color:#999;padding:30px;font-size:13px;}
+  .note{font-size:11.5px;color:#7c7c8a;margin-top:6px;line-height:1.6;}
+  .scroll{overflow-x:auto;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">← Seller Pro</a></div>
+<h1>🚨 RTO / Return Pattern Alerts</h1>
+<div class="note">Kaunsa SKU, product ya courier average se zyada return/cancel de raha hai — pattern turant pakड़o. Rate hamesha "is date range mein PLACE hue orders" ke against nikalta hai, taaki compare fair rahe.</div>
+
+<div class="card">
+  <div class="row">
+    <input type="date" id="dFrom">
+    <span>se</span>
+    <input type="date" id="dTo">
+    <span>orders</span>
+  </div>
+  <div class="row">
+    <span style="font-size:12.5px;color:#555">Return aane ka max wait:</span>
+    <input type="number" id="lagDays" value="45" min="7" max="120">
+    <span style="font-size:12.5px;color:#555">din</span>
+    <button onclick="loadData()">🔍 Analyze Karo</button>
+  </div>
+  <div class="row">
+    <div class="toggle" id="viewByToggle">
+      <button data-v="sku" class="on" onclick="setViewBy('sku')">SKU-wise</button>
+      <button data-v="name" onclick="setViewBy('name')">Product Name-wise</button>
+      <button data-v="courier" onclick="setViewBy('courier')">Courier-wise</button>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="resultCard" style="display:none">
+  <div class="scroll">
+    <table id="tb"><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table>
+  </div>
+  <div class="note" id="summary"></div>
+  <div class="note" id="methodNote"></div>
+</div>
+
+<div class="card empty" id="emptyState">Date range choose karke "Analyze Karo" dabao.</div>
+
+<script src="shared-config.js"></script>
+<script>
+/*
+  ── DATA FLOW (rethink) ──
+  Pehle teeno tables (orders/cancels/returns) apne-apne `date` field se independently
+  filter hoti thi. Problem: `date` har table mein ALAG cheez hai — orders.date = order
+  place hone ki date, returns.date = return SCAN hone ki date (jo order-date se hafton
+  baad ho sakti hai), cancels.date = cancel hone ki date. Teeno ko ek hi date-range se
+  filter karne se numerator (cancels+returns) aur denominator (orders) do alag-alag
+  pools ban jaate the jinka AWB se koi lena-dena nahi tha — isi wajah se pattern/rate
+  galat (kabhi bahut zyada, kabhi bahut kam) dikhta tha.
+
+  AB: sirf ORDERS is date-range se filter hoti hai (ye hi denominator hai — "in dino
+  jitne orders place hue"). Fir:
+    • cancels ko `order_date` (cancel row ke andar save asli order-date) se match
+      karte hain — chahe cancel khud kabhi bhi hui ho.
+    • returns table mein order_date save hi nahi hota, isliye returns ko thoda WIDE
+      window (`to` + "return aane ka max wait" days) mein la kar, sirf unhi returns ko
+      count karte hain jinka AWB upar wale orders pool mein maujood hai — yani jinka
+      order isi date-range mein place hua tha.
+  Har row ke SKU/Product Name/Courier bhi orders table se hi liye jaate hain (cancel/
+  return row ki apni copy se nahi) taaki grouping consistent rahe.
+*/
+let _orders=[], _cancels=[], _returns=[], _ordersMap={};
+let viewBy='sku';
+let _skipInfo={cancelNoOrderDate:0,returnOutOfRange:0};
+
+function getTodayStr(){
+  const d=new Date(Date.now()+5.5*3600*1000);
+  return d.toISOString().slice(0,10);
+}
+function addDaysStr(dateStr,days){
+  const d=new Date(dateStr+'T00:00:00+05:30');
+  d.setDate(d.getDate()+days);
+  return d.toISOString().slice(0,10);
+}
+(function initDates(){
+  const to=getTodayStr();
+  const fromD=addDaysStr(to,-30);
+  document.getElementById('dTo').value=to;
+  document.getElementById('dFrom').value=fromD;
+})();
+
+function setViewBy(v){
+  viewBy=v;
+  document.querySelectorAll('#viewByToggle button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(_orders.length) render();
+}
+
+async function loadData(){
+  const from=document.getElementById('dFrom').value;
+  const to=document.getElementById('dTo').value;
+  const lagDays=parseInt(document.getElementById('lagDays').value,10)||45;
+  if(!from||!to){alert('Dono dates choose karo');return;}
+  document.getElementById('emptyState').textContent='⏳ Data la rahe hain...';
+  document.getElementById('emptyState').style.display='block';
+  document.getElementById('resultCard').style.display='none';
+
+  const extendedTo=addDaysStr(to,lagDays);
+  const oFilt='date=gte.'+from+'&date=lte.'+to;
+  const cFilt='order_date=gte.'+from+'&order_date=lte.'+to;
+  const rFilt='date=gte.'+from+'&date=lte.'+extendedTo;
+
+  const [orders,cancelsRaw,returnsRaw]=await Promise.all([
+    sbGetAll('orders','awb,sku,courier,platform,product_name', oFilt),
+    sbGetAll('cancels','awb,sku,courier,platform,product_name,order_date', cFilt),
+    sbGetAll('returns','awb,sku,courier,platform,product_name,date', rFilt)
+  ]);
+  _orders=orders||[];
+  if(!_orders.length){
+    document.getElementById('emptyState').textContent='❌ Is date range mein koi orders nahi mile.';
+    document.getElementById('emptyState').style.display='block';
+    return;
+  }
+
+  _ordersMap={};
+  _orders.forEach(o=>{ if(o.awb) _ordersMap[o.awb]=o; });
+
+  // Cancels: order_date filter se already sirf isi range ke orders ki cancels mili hain.
+  // Agar order khud orders table mein na mila ho (bahut purani/manual entry), tab bhi
+  // cancel ka apna data use karke count karo — sirf fields ko orders se enrich karo jab mile.
+  _cancels=(cancelsRaw||[]).map(c=>{
+    const o=_ordersMap[c.awb];
+    return o?{...c,sku:o.sku,courier:o.courier,platform:o.platform,product_name:o.product_name}:c;
+  });
+
+  // Returns: koi order_date field nahi hai isliye WIDE window mein saari returns mangayi
+  // hain — ab sirf unhi ko rakho jinka AWB is date-range ke orders mein maujood hai.
+  _skipInfo.returnOutOfRange=0;
+  _returns=(returnsRaw||[]).filter(r=>{
+    const o=_ordersMap[r.awb];
+    if(!o){ _skipInfo.returnOutOfRange++; return false; }
+    r.sku=o.sku; r.courier=o.courier; r.platform=o.platform; r.product_name=o.product_name;
+    return true;
+  });
+
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('resultCard').style.display='block';
+  render();
+}
+
+function render(){
+  const key = viewBy==='sku' ? (r=>r.sku||'(SKU nahi mila)')
+            : viewBy==='name' ? (r=>r.product_name||'(Naam nahi mila)')
+            : (r=>r.courier||'(Courier nahi mila)');
+  const stats={};
+  const bump=(k,field)=>{ if(!stats[k]) stats[k]={orders:0,cancels:0,returns:0}; stats[k][field]++; };
+  _orders.forEach(r=>bump(key(r),'orders'));
+  _cancels.forEach(r=>bump(key(r),'cancels'));
+  _returns.forEach(r=>bump(key(r),'returns'));
+
+  const rows=Object.keys(stats).map(k=>{
+    const s=stats[k];
+    const bad=s.cancels+s.returns;
+    const rate = s.orders>0 ? (bad/s.orders*100) : 0;
+    return {key:k, orders:s.orders, cancels:s.cancels, returns:s.returns, rate};
+  }).filter(r=>r.orders>=3); // bahut kam orders wale noise hote hain, skip
+
+  const label = viewBy==='sku'?'SKU':viewBy==='name'?'Product Name':'Courier';
+
+  if(!rows.length){
+    document.getElementById('tbody').innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;padding:20px">Kaafi data nahi (min 3 orders per '+label+' chahiye)</td></tr>';
+    document.getElementById('summary').textContent='';
+    document.getElementById('methodNote').textContent='';
+    return;
+  }
+
+  const avgRate = rows.reduce((a,r)=>a+r.rate,0)/rows.length;
+  rows.sort((a,b)=>b.rate-a.rate);
+
+  const thead=document.getElementById('thead');
+  thead.innerHTML='<th>'+label+'</th><th>Orders</th><th>Cancels</th><th>Returns</th><th>Return+Cancel %</th>';
+
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML=rows.map(r=>{
+    let cls='rate-ok', badge='';
+    if(r.rate >= avgRate*2 && r.rate>=15){ cls='rate-bad'; badge='<span class="badge high">🔴 HIGH</span>'; }
+    else if(r.rate >= avgRate*1.4 && r.rate>=8){ cls='rate-warn'; badge='<span class="badge mid">🟡 WATCH</span>'; }
+    return '<tr><td>'+esc(r.key)+' '+badge+'</td><td>'+r.orders+'</td><td>'+r.cancels+'</td><td>'+r.returns+'</td><td class="'+cls+'">'+r.rate.toFixed(1)+'%</td></tr>';
+  }).join('');
+
+  document.getElementById('summary').textContent = 'Average return+cancel rate: ' + avgRate.toFixed(1) + '% — 🔴 HIGH = average se 2x+ zyada, 🟡 WATCH = 1.4x+ zyada';
+  document.getElementById('methodNote').textContent = 'Base: is date-range mein place hue '+_orders.length+' orders. Cancels/Returns wahi count hui hain jinka order isi range mein tha'+(_skipInfo.returnOutOfRange?(' ('+_skipInfo.returnOutOfRange+' returns skip huin kyunki unka order is range se bahar tha)'):'')+'.';
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+</script>
+</body>
+</html>
