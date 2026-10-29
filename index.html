@@ -5380,7 +5380,7 @@ async function dmDownloadFullBackup(){
     const cA=new Set(), cO=new Set();
     (data.cancelsAll||data.cancels||[]).forEach(r=>{ const a=_nk(r.awb), o=_nk(r.order_id); if(a) cA.add(a); if(o) cO.add(o); });
     let nCancelled=0, nNotShipped=0;
-    const dispatchRows=(data.orders||[]).filter(r=>{
+    const dispatchRows=_dedupeNoAwb(data.orders||[]).filter(r=>{
       const st=String(r.order_status||'shipped').toLowerCase();
       if(st!=='shipped'){ nNotShipped++; return false; }
       const a=_nk(r.awb), o=_nk(r.order_id);
@@ -6300,7 +6300,7 @@ async function ordersLoad(forceRefresh){
     if(allRows.length>=50000) break; // safety cap
   }
   if(!fetchError){
-    lOrders=allRows.map(_toCamel_orders);
+    lOrders=_dedupeNoAwb(allRows.map(_toCamel_orders));
     _ordersLastLoadTs=Date.now();
     lRender_ifData(); updateHomeStats(); cancelPopulateSkus();
     return;
@@ -6309,6 +6309,43 @@ async function ordersLoad(forceRefresh){
   lOrders=[];
   _ordersLastLoadTs=Date.now();
   lRender_ifData(); updateHomeStats(); cancelPopulateSkus();
+}
+// ── AWB-less orders (Amazon): ek order = ek row ──
+// Pehle key "NO_AWB_<orderId>_<idx>" banti thi (idx = lOrders me position) — wahi order dobara process ho to nayi key
+// banti thi aur order 2 baar save ho jata tha (report me double). Ab key fixed hai: NO_AWB_<orderId>_<sku>.
+function _noAwbKey(r,idx){
+  const oid=r.orderId||r.order_id||'';
+  if(oid) return 'NO_AWB_'+oid+'_'+String(r.sku||'').replace(/[^A-Za-z0-9._-]/g,'');
+  return 'NO_AWB_'+(r.platform||'x')+'_'+idx;
+}
+// Purani duplicate rows (NO_AWB_... jo ek hi orderId+sku+date ki ho) ko ek hi gino — report/backup/lOrders sab me.
+function _dedupeNoAwb(rows){
+  const seen=new Set(), out=[];
+  for(const r of (rows||[])){
+    const awb=String((r&&r.awb)||'');
+    if(awb.startsWith('NO_AWB_')){
+      const oid=r.orderId||r.order_id||'';
+      const k=oid?('O|'+oid+'|'+(r.sku||'')+'|'+(r.platform||'')+'|'+(r.date||'')):awb;
+      if(seen.has(k)) continue; seen.add(k);
+    }
+    out.push(r);
+  }
+  return out;
+}
+// Cloud se purani duplicate AWB-less rows hata do: wahi orderId+sku+date ki koi aur NO_AWB_ key ho to delete (sirf aaj ki rows ke liye)
+async function _cleanupNoAwbDupes(rows,today){
+  if(!SUPABASE_ENABLED) return;
+  const seen=new Set(); let n=0;
+  for(const r of (rows||[])){
+    const awb=String(r.awb||''); const oid=r.orderId||r.order_id||'';
+    if(!awb.startsWith('NO_AWB_')||!oid) continue;
+    const date=r.date||today; if(date!==today) continue;
+    const k=oid+'|'+(r.sku||'')+'|'+date; if(seen.has(k)) continue; seen.add(k);
+    if(++n>300) break;
+    let q='order_id=eq.'+encodeURIComponent(oid)+'&date=eq.'+encodeURIComponent(date)+'&awb=like.'+encodeURIComponent('NO_AWB_*')+'&awb=neq.'+encodeURIComponent(awb);
+    if(r.sku) q+='&sku=eq.'+encodeURIComponent(r.sku);
+    await fetch(SUPABASE_URL+'/rest/v1/orders?'+q,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=minimal'}}).catch(()=>{});
+  }
 }
 async function ordersSave(){
   const today=getTodayStr();
@@ -6321,11 +6358,11 @@ async function ordersSave(){
   try{ prevRows = await idbCacheGet('orders_report') || []; }catch(e){}
   const _mergeMap=new Map();
   prevRows.forEach(r=>{
-    const k=(r.awb||('NO_AWB_'+(r.orderId||r.platform||'x')))+'_'+(r.date||today);
+    const k=(r.awb||_noAwbKey(r,0))+'_'+(r.date||today);
     _mergeMap.set(k, r);
   });
   newRows.forEach((r,idx)=>{
-    const k=(r.awb||('NO_AWB_'+(r.orderId||r.platform||'x')+'_'+idx))+'_'+(r.date||today);
+    const k=(r.awb||_noAwbKey(r,idx))+'_'+(r.date||today);
     _mergeMap.set(k, r); // naya data same key ho to overwrite karega, warna purana safe rahega
   });
   const merged=[..._mergeMap.values()];
@@ -6335,8 +6372,9 @@ async function ordersSave(){
       const seen=new Map();
       newRows.forEach((r,idx)=>{
         const dateKey = r.date || today;
-        const key = r.awb ? (r.awb + '_' + dateKey) : ('NO_AWB_'+(r.orderId||r.platform||'x')+'_'+idx);
-        seen.set(key, r.awb ? r : {...r, awb: key});
+        const nk = r.awb ? r.awb : _noAwbKey(r,idx);
+        const key = nk + '_' + dateKey;
+        seen.set(key, r.awb ? r : {...r, awb: nk});
       });
       const dedupedRows=[...seen.values()];
       const toInsert=dedupedRows.map(r=>_toSnake_orders(r));
@@ -6385,6 +6423,7 @@ async function ordersSave(){
         } else {
           toast('☁️ '+savedCount+' orders cloud pe save ho gaye','#059669',3000);
         }
+        try{ await _cleanupNoAwbDupes(dedupedRows,today); }catch(e){ console.warn('[noAwb cleanup]',e); }
       }
     }catch(e){ console.warn('orders supabase save:',e); toast('⚠️ Orders save error: '+e.message,'#dc2626',6000); }
     try{
@@ -6407,7 +6446,7 @@ async function ordersSave(){
       }
     }catch(e){ console.warn('[ordersSave] reprocessed mark error:',e); }
   }
-  lOrders = merged;
+  lOrders = _dedupeNoAwb(merged);
   // IDB cache ko fresh merged data se update karo — clear mat karo
   // Isse agli baar ordersLoad() IDB se serve karega (Supabase hit nahi hoga)
   await idbCacheSet('orders_report', merged).catch(()=>{});
@@ -8191,22 +8230,75 @@ function _applyCancelSkip(orders,sPages,platform){
   sPages.length=0; keepPages.forEach(p=>sPages.push(p));
   return skipped;
 }
-function _lShowSkipped(){
+// ── Skip hue (kal ke cancel) orders: list dekho + AWB / Order ID copy + Excel (Meesho ticket ke liye) ──
+const _SKIPLIST_LS='sp_last_skipped_v1';
+function _skEsc(x){ return String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function _skFiltered(){
+  const sel=document.getElementById('lSkipPlat'); const p=sel?sel.value:'';
+  return (window._lSkipped||[]).filter(o=>!p||String(o.platform||'meesho').toLowerCase()===p);
+}
+async function _skCopy(text,okMsg){
+  try{ await navigator.clipboard.writeText(text); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(_e){} ta.remove(); }
+  toast(okMsg,'#15803d');
+}
+function lSkipCopy(kind){
+  const L=_skFiltered(); if(!L.length){ toast('Is platform me koi skip order nahi','#dc2626'); return; }
+  if(kind==='awb')   return _skCopy(L.map(o=>o.awb).filter(Boolean).join('\n'),'📋 '+L.filter(o=>o.awb).length+' AWB copy ho gaye');
+  if(kind==='oid')   return _skCopy(L.map(o=>o.orderId).filter(Boolean).join('\n'),'📋 '+L.filter(o=>o.orderId).length+' Order ID copy ho gaye');
+  const head=['AWB','Order ID','SKU','Product','Platform','Courier','Cancel Date'];
+  const rows=L.map(o=>[o.awb,o.orderId,o.sku,(typeof skuLookup==='function'?skuLookup(o.sku):'')||'',o.platform,o.courier,o.cancelDate].map(x=>x||'').join('\t'));
+  return _skCopy([head.join('\t')].concat(rows).join('\n'),'📋 '+L.length+' orders ki poori list copy (Excel me paste karo)');
+}
+async function lSkipExcel(){
+  const L=_skFiltered(); if(!L.length){ toast('Is platform me koi skip order nahi','#dc2626'); return; }
+  try{
+    await _ensureLib('xlsx');
+    const data=L.map(o=>({'AWB':o.awb||'','Order ID':o.orderId||'','SKU':o.sku||'','Product':(typeof skuLookup==='function'?skuLookup(o.sku):'')||'','Platform':o.platform||'','Courier':o.courier||'','Cancel Date':o.cancelDate||''}));
+    const ws=XLSX.utils.json_to_sheet(data); ws['!cols']=[{wch:22},{wch:26},{wch:26},{wch:26},{wch:10},{wch:14},{wch:12}];
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Skipped Cancelled');
+    XLSX.writeFile(wb,'skipped-cancelled-orders-'+getTodayStr()+'.xlsx');
+    toast('📥 '+L.length+' orders Excel me download','#15803d');
+  }catch(e){ toast('❌ Excel nahi bani: '+e.message,'#dc2626'); }
+}
+function _lShowSkipped(noSave){
   const el=document.getElementById('lSkipInfo'); if(!el) return;
   const list=window._lSkipped||[];
-  if(!window._cancelSkip){ el.style.display='none'; el.innerHTML=''; return; }
   const cs=window._cancelSkip;
   if(!list.length){
+    if(!cs){ el.style.display='none'; el.innerHTML=''; return; }
     el.style.display='block';
     el.innerHTML='✅ Kal ke cancel check ho gaya ('+cs.count+' cancel, '+cs.from+' → '+cs.today+') — koi order match nahi hua, sab process hue.';
     return;
   }
-  const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  if(!noSave){ try{ localStorage.setItem(_SKIPLIST_LS,JSON.stringify({date:getTodayStr(),list})); }catch(e){} }
+  const plats=[...new Set(list.map(o=>String(o.platform||'meesho').toLowerCase()))];
+  const btn='style="padding:6px 9px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;color:#fff;background:';
   el.style.display='block';
   el.innerHTML='<b>⛔ '+list.length+' order skip hue</b> (pehle cancel ho chuke the, isliye process nahi kiye)'+
-    '<details style="margin-top:4px"><summary style="cursor:pointer;font-weight:800">List dekho</summary><div style="max-height:180px;overflow:auto;margin-top:4px;font-family:monospace;font-size:10.5px;line-height:1.5">'+
-    list.map(o=>esc((o.awb||'—')+' | '+(o.orderId||'—')+' | '+(o.sku||'—')+' | cancel: '+(o.cancelDate||'—'))).join('<br>')+'</div></details>';
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center">'+
+      '<select id="lSkipPlat" onchange="_lSkipRenderRows()" style="padding:6px;border:1.5px solid #fdba74;border-radius:8px;font-size:11px;font-weight:700;background:#fff;color:#9a3412"><option value="">Sab platform</option>'+
+        plats.map(p=>'<option value="'+_skEsc(p)+'">'+_skEsc(p.charAt(0).toUpperCase()+p.slice(1))+'</option>').join('')+'</select>'+
+      '<button type="button" onclick="lSkipCopy(\'awb\')" '+btn+'#2563eb">📋 AWB copy</button>'+
+      '<button type="button" onclick="lSkipCopy(\'oid\')" '+btn+'#7c3aed">📋 Order ID copy</button>'+
+      '<button type="button" onclick="lSkipCopy(\'all\')" '+btn+'#0f766e">📋 Poori list copy</button>'+
+      '<button type="button" onclick="lSkipExcel()" '+btn+'#15803d">📥 Excel</button>'+
+    '</div>'+
+    '<details open style="margin-top:2px"><summary style="cursor:pointer;font-weight:800">List <span id="lSkipCnt"></span></summary>'+
+    '<div id="lSkipRows" style="max-height:180px;overflow:auto;margin-top:4px;font-family:monospace;font-size:10.5px;line-height:1.5"></div></details>';
+  _lSkipRenderRows();
 }
+function _lSkipRenderRows(){
+  const rows=document.getElementById('lSkipRows'), cnt=document.getElementById('lSkipCnt'); if(!rows) return;
+  const L=_skFiltered();
+  if(cnt) cnt.textContent='('+L.length+')';
+  rows.innerHTML=L.map(o=>_skEsc((o.awb||'—')+' | '+(o.orderId||'—')+' | '+(o.sku||'—')+' | '+(o.courier||'')+' | cancel: '+(o.cancelDate||'—'))).join('<br>');
+}
+// Pichli skip list page reload ke baad bhi dikhe (ticket baad me raise karna ho to)
+try{
+  const _sv=JSON.parse(localStorage.getItem(_SKIPLIST_LS)||'null');
+  if(_sv&&Array.isArray(_sv.list)&&_sv.list.length){ window._lSkipped=_sv.list; setTimeout(()=>{ try{ _lShowSkipped(true); const el=document.getElementById('lSkipInfo'); if(el&&_sv.date) el.insertAdjacentHTML('afterbegin','<div style="font-size:10px;opacity:.7;margin-bottom:2px">Pichli skip list ('+_skEsc(_sv.date)+')</div>'); }catch(e){} },0); }
+}catch(e){}
 async function lProcess(){
   await _ensureLibs('pdfjs','pdflib');
   if(!bulkFiles.length) return;
@@ -12403,6 +12495,7 @@ async function repGenerate(){
     sourceOrders=savedOrders||[];
     if(sourceOrders.length) usingMemory=true;
   }
+  sourceOrders=_dedupeNoAwb(sourceOrders);     // purani duplicate Amazon rows (cache me ho tab bhi) double count na hon
   let orders=sourceOrders;
   if(dateFrom||dateTo){
     orders=sourceOrders.filter(r=>{
