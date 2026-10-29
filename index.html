@@ -1037,7 +1037,7 @@ body.dark .sp-inf2d{box-shadow:0 6px 32px rgba(0,0,0,.4);}
     </div>
     <div id="lMergeDone" style="display:none">
       <div style="font-size:12px;font-weight:800;color:#059669;margin-bottom:10px" id="lMergeDoneMsg">✅ PDFs merged — ab crop karo ya seedha process karo</div>
-      <div style="display:flex;gap:8px">
+      <div id="lMergeBtns" style="display:flex;gap:8px">
         <button onclick="lShowCropStep()" style="flex:1;padding:11px 6px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:10px;color:#fff;font-family:Outfit,sans-serif;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(16,185,129,.3)">✂️ Crop Karo</button>
         <button onclick="lSkipCropAndProcess()" style="flex:1;padding:11px 6px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:10px;color:#fff;font-family:Outfit,sans-serif;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(102,126,234,.3)">⚡ Skip Crop → Process</button>
       </div>
@@ -1126,7 +1126,7 @@ body.dark .sp-inf2d{box-shadow:0 6px 32px rgba(0,0,0,.4);}
       </div>
 
       <!-- Kal ke cancel orders skip toggle -->
-      <label id="lSkipCancelRow" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;padding:8px 10px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;cursor:pointer">
+      <label id="lSkipCancelRow" style="display:none;align-items:flex-start;gap:8px;margin-bottom:10px;padding:8px 10px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;cursor:pointer">
         <input type="checkbox" id="lSkipCancelTgl" checked onchange="lSkipCancelToggle(this)" style="margin-top:2px;width:16px;height:16px;flex:none">
         <span style="font-size:11px;font-weight:800;color:#991b1b;line-height:1.45">⛔ Kal ke cancel orders skip karo <span style="font-weight:600;color:#7f1d1d">— aaj ke orders me jinka AWB ya Order ID pichle 7 din ke cancel se match ho wo process nahi honge (OFF karne par sab process honge)</span></span>
       </label>
@@ -3742,6 +3742,7 @@ async function lMergePDFs(){
     if(doneMsg) doneMsg.textContent='✅ '+bulkFiles.length+' PDF'+(bulkFiles.length>1?'s':'')+' merged ('+
       window._mergedPageCounts.reduce((a,b)=>a+b,0)+' pages) — crop karo ya process karo';
     document.getElementById('lMergeDone').style.display='block';
+    { const mb=document.getElementById('lMergeBtns'); if(mb) mb.style.display='flex'; }
   }catch(err){
     try{
       const ab=await bulkFiles[0].file.arrayBuffer();
@@ -3758,9 +3759,12 @@ async function lMergePDFs(){
     const errEl=document.getElementById('lMergeErr');
     if(errEl){errEl.textContent='⚠️ Merge fail — fallback mode: '+err.message;errEl.style.display='block';}
     document.getElementById('lMergeDone').style.display='block';
+    { const mb=document.getElementById('lMergeBtns'); if(mb) mb.style.display='flex'; }
   }
 }
 function lShowCropStep(){
+  { const mb=document.getElementById('lMergeBtns'); if(mb) mb.style.display='none'; }   // upar ke Crop/Skip buttons hata do — neeche wale hi rahenge
+  try{ _lApplySkipUI(); _lDetectQueuePlatforms().then(_lApplySkipUI).catch(()=>{}); }catch(e){}
   document.getElementById('lStep2').style.display='block';
   document.getElementById('lStep3').style.display='none';
   document.getElementById('lStep2').scrollIntoView({behavior:'smooth',block:'start'});
@@ -3795,6 +3799,7 @@ function lStep2Reset(){
   const _pb2=document.getElementById('lProcBtn');if(_pb2)_pb2.style.display='none';
 }
 function lSkipCropAndProcess(){
+  { const mb=document.getElementById('lMergeBtns'); if(mb) mb.style.display='none'; }
   window._croppedPdfBytes=null;
   document.getElementById('lStep2').style.display='none';
   document.getElementById('lStep3').style.display='block';
@@ -8177,6 +8182,32 @@ async function processSinglePDF(fileItem, onPageProgress){
 // Aaj ki file ke jis order ka AWB ya Order ID pichle 7 din (aaj se pehle) ke cancels se match kare, wo process nahi hota:
 // na orders me jata hai, na label PDF me aata hai. Toggle OFF => sab process.
 const _SKIPC_LS='sp_skip_cancelled_v1', _SKIPC_DAYS=7;
+const _SKIPC_PLATFORMS=['meesho','flipkart','amazon','generic'];     // cancel-skip sabhi platforms ke labels par lagta hai (cancel list bhi sabhi platforms ki)
+// Queue me kaunse platform ke labels hain (pehle 3 pages ka text padhkar) — toggle/list sirf relevant platform par dikhe
+let _lQP={sig:'',list:null};
+function _lQueueSig(){ return (window.bulkFiles||[]).slice(0,20).map(f=>f.file.name+'|'+f.file.size+'|'+(f.file.lastModified||0)).join(';'); }
+async function _lDetectQueuePlatforms(){
+  const files=(window.bulkFiles||[]).slice(0,20);
+  const sig=_lQueueSig();
+  if(_lQP.list&&_lQP.sig===sig) return _lQP.list;
+  await _ensureLibs('pdfjs');
+  const set=new Set();
+  for(const f of files){
+    try{
+      const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await f.file.arrayBuffer())}).promise;
+      let txt='';
+      for(let p=1;p<=Math.min(3,pdf.numPages);p++){ const pg=await pdf.getPage(p); const ct=await pg.getTextContent(); txt+=' '+ct.items.map(i=>i.str).join(' '); pg.cleanup(); }
+      set.add(detectPlatform(txt)); try{ pdf.destroy(); }catch(e){}
+    }catch(e){}
+  }
+  _lQP={sig,list:[...set]}; window._lQueuePlatforms=_lQP.list;
+  return _lQP.list;
+}
+function _lSkipRelevant(){ const l=(_lQP.sig===_lQueueSig())?_lQP.list:null; return !!(l&&l.some(p=>_SKIPC_PLATFORMS.includes(p))); }   // purani queue ka platform naye queue par nahi lagta
+function _lApplySkipUI(){
+  const row=document.getElementById('lSkipCancelRow'); if(row) row.style.display=_lSkipRelevant()?'flex':'none';
+  try{ _lShowSkipped(true); }catch(e){}
+}
 function lSkipCancelOn(){ try{ return localStorage.getItem(_SKIPC_LS)!=='0'; }catch(e){ return true; } }
 function lSkipCancelToggle(cb){
   try{ localStorage.setItem(_SKIPC_LS,cb.checked?'1':'0'); }catch(e){}
@@ -8217,6 +8248,7 @@ async function _loadCancelSkipSets(){
 // processSinglePDF ke end me: skip hone wale orders/pages hata do aur record rakho
 function _applyCancelSkip(orders,sPages,platform){
   const cs=window._cancelSkip; if(!cs) return [];
+  if(!_SKIPC_PLATFORMS.includes(platform)) return [];
   const hit=o=>{
     const a=_skipNorm(o.awb), id=_skipNorm(o.orderId);
     return (a&&cs.byAwb.get(a))||(id&&cs.byOid.get(id))||null;
@@ -8263,6 +8295,7 @@ async function lSkipExcel(){
 }
 function _lShowSkipped(noSave){
   const el=document.getElementById('lSkipInfo'); if(!el) return;
+  if(!_lSkipRelevant()){ el.style.display='none'; el.innerHTML=''; return; }     // is queue me skip wala platform nahi
   const list=window._lSkipped||[];
   const cs=window._cancelSkip;
   if(!list.length){
@@ -8286,6 +8319,7 @@ function _lShowSkipped(noSave){
     '</div>'+
     '<details open style="margin-top:2px"><summary style="cursor:pointer;font-weight:800">List <span id="lSkipCnt"></span></summary>'+
     '<div id="lSkipRows" style="max-height:180px;overflow:auto;margin-top:4px;font-family:monospace;font-size:10.5px;line-height:1.5"></div></details>';
+  if(window._lSkipFromStore) el.insertAdjacentHTML('afterbegin','<div style="font-size:10px;opacity:.7;margin-bottom:2px">Pichli skip list ('+_skEsc(window._lSkipFromStore)+')</div>');
   _lSkipRenderRows();
 }
 function _lSkipRenderRows(){
@@ -8297,7 +8331,7 @@ function _lSkipRenderRows(){
 // Pichli skip list page reload ke baad bhi dikhe (ticket baad me raise karna ho to)
 try{
   const _sv=JSON.parse(localStorage.getItem(_SKIPLIST_LS)||'null');
-  if(_sv&&Array.isArray(_sv.list)&&_sv.list.length){ window._lSkipped=_sv.list; setTimeout(()=>{ try{ _lShowSkipped(true); const el=document.getElementById('lSkipInfo'); if(el&&_sv.date) el.insertAdjacentHTML('afterbegin','<div style="font-size:10px;opacity:.7;margin-bottom:2px">Pichli skip list ('+_skEsc(_sv.date)+')</div>'); }catch(e){} },0); }
+  if(_sv&&Array.isArray(_sv.list)&&_sv.list.length){ window._lSkipped=_sv.list; window._lSkipFromStore=_sv.date||''; }
 }catch(e){}
 async function lProcess(){
   await _ensureLibs('pdfjs','pdflib');
@@ -8339,8 +8373,9 @@ async function lProcess(){
     if(errEl){errEl.textContent='❌ pdf-lib load nahi hua — page reload karo!';errEl.classList.add('show');}
     if(btn)btn.disabled=false;if(upProg)upProg.style.display='none';return;
   }
-  window._cancelSkip=null; window._lSkipped=[];
-  if(lSkipCancelOn()){
+  window._cancelSkip=null; window._lSkipped=[]; window._lSkipFromStore=null;
+  try{ await _lDetectQueuePlatforms(); }catch(e){}
+  if(lSkipCancelOn() && _lSkipRelevant()){
     setUP(2,'⛔ Kal ke cancel orders check ho rahe hain...','');
     try{ window._cancelSkip=await _loadCancelSkipSets(); }
     catch(e){ console.warn('[skipCancel] load fail',e); window._cancelSkip=null; toast('⚠️ Kal ke cancel list load nahi hui — skip check nahi hua','#d97706',4000); }
