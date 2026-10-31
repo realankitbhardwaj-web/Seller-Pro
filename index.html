@@ -1128,8 +1128,9 @@ body.dark .sp-inf2d{box-shadow:0 6px 32px rgba(0,0,0,.4);}
       <!-- Kal ke cancel orders skip toggle -->
       <label id="lSkipCancelRow" style="display:none;align-items:flex-start;gap:8px;margin-bottom:10px;padding:8px 10px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;cursor:pointer">
         <input type="checkbox" id="lSkipCancelTgl" checked onchange="lSkipCancelToggle(this)" style="margin-top:2px;width:16px;height:16px;flex:none">
-        <span style="font-size:11px;font-weight:800;color:#991b1b;line-height:1.45">⛔ Kal ke cancel orders skip karo <span style="font-weight:600;color:#7f1d1d">— aaj ke orders me jinka AWB ya Order ID pichle 7 din ke cancel se match ho wo process nahi honge (OFF karne par sab process honge)</span></span>
+        <span style="font-size:11px;font-weight:800;color:#991b1b;line-height:1.45">⛔ Kal ke cancel orders skip karo <span style="font-weight:600;color:#7f1d1d">— jis platform ke labels process ho rahe hain, uske pichle 7 din ke cancels (aaj ko chhodkar) se AWB ya Order ID match ho to wo order process nahi hoga (OFF karne par sab process honge)</span></span>
       </label>
+      <div id="lSkipLastLink" onclick="lSkipShowLast()" style="display:none;margin:-4px 0 8px 4px;font-size:10.5px;font-weight:700;color:#9a3412;text-decoration:underline;cursor:pointer">📂 Pichli skip list dekho</div>
       <div id="lSkipInfo" style="display:none;margin-bottom:10px;padding:8px 10px;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;font-size:11px;color:#9a3412"></div>
 
       <div style="display:flex;gap:8px">
@@ -8179,7 +8180,7 @@ async function processSinglePDF(fileItem, onPageProgress){
   return {orders, sPages, raw, platform, pdfName, pageCount: total};
 }
 // ══════════ Kal ke cancel orders skip (toggle) ══════════
-// Aaj ki file ke jis order ka AWB ya Order ID pichle 7 din (aaj se pehle) ke cancels se match kare, wo process nahi hota:
+// Aaj ki file ke jis order ka AWB ya Order ID usi platform ke pichle 7 din (aaj ko chhodkar) ke cancels se match kare, wo process nahi hota:
 // na orders me jata hai, na label PDF me aata hai. Toggle OFF => sab process.
 const _SKIPC_LS='sp_skip_cancelled_v1', _SKIPC_DAYS=7;
 const _SKIPC_PLATFORMS=['meesho','flipkart','amazon','generic'];     // cancel-skip sabhi platforms ke labels par lagta hai (cancel list bhi sabhi platforms ki)
@@ -8205,8 +8206,18 @@ async function _lDetectQueuePlatforms(){
 }
 function _lSkipRelevant(){ const l=(_lQP.sig===_lQueueSig())?_lQP.list:null; return !!(l&&l.some(p=>_SKIPC_PLATFORMS.includes(p))); }   // purani queue ka platform naye queue par nahi lagta
 function _lApplySkipUI(){
-  const row=document.getElementById('lSkipCancelRow'); if(row) row.style.display=_lSkipRelevant()?'flex':'none';
-  try{ _lShowSkipped(true); }catch(e){}
+  const row=document.getElementById('lSkipCancelRow'), rel=_lSkipRelevant();
+  if(row) row.style.display=rel?'flex':'none';
+  const info=document.getElementById('lSkipInfo');
+  if(!rel){ if(info){ info.style.display='none'; info.innerHTML=''; } }
+  else if(!window._lSkipRun && info){ info.style.display='none'; info.innerHTML=''; }    // process se pehle box khali (purani list nahi)
+  else { try{ _lShowSkipped(true); }catch(e){} }
+  const lk=document.getElementById('lSkipLastLink');
+  if(lk) lk.style.display=(rel&&!window._lSkipRun&&window._lSkipLast)?'block':'none';
+}
+function lSkipShowLast(){
+  const l=window._lSkipLast; if(!l) return;
+  window._lSkipped=l.list; window._lSkipFromStore=l.date||''; window._lSkipRun=true; _lApplySkipUI();
 }
 function lSkipCancelOn(){ try{ return localStorage.getItem(_SKIPC_LS)!=='0'; }catch(e){ return true; } }
 function lSkipCancelToggle(cb){
@@ -8216,42 +8227,57 @@ function lSkipCancelToggle(cb){
 try{ const _tg=document.getElementById('lSkipCancelTgl'); if(_tg) _tg.checked=lSkipCancelOn(); }catch(e){}
 function _skipNorm(x){ return String(x==null?'':x).toUpperCase().replace(/[^A-Z0-9]/g,''); }
 async function _loadCancelSkipSets(){
+  // Pichle _SKIPC_DAYS din (aaj ko chhodkar) ke cancels, PLATFORM-WISE: Meesho ke labels sirf Meesho cancels se, Flipkart sirf
+  // Flipkart se, Amazon sirf Amazon se match honge. Aaj ka cancel aaj ke order se match nahi hota. reprocessed flag ignore.
   const today=getTodayStr();
   const d=new Date(); d.setDate(d.getDate()-_SKIPC_DAYS);
   const from=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  const byAwb=new Map(), byOid=new Map();
-  const add=(r)=>{
-    if(!r||r.reprocessed===true) return;
-    const dt=r.date||''; if(dt&&(dt>=today||dt<from)) return;          // sirf aaj se pehle ke (last 7 din)
-    const info={date:dt,awb:r.awb||'',orderId:r.order_id||r.orderId||''};
+  const byPlat={};
+  const add=(r,forcePlat)=>{
+    if(!r) return;
+    const dt=r.date||''; if(dt&&(dt>=today||dt<from)) return;
+    const plat=forcePlat||String(r.platform||'meesho').toLowerCase();
+    const B=byPlat[plat]||(byPlat[plat]={byAwb:new Map(),byOid:new Map()});
+    const info={date:dt,awb:r.awb||'',orderId:r.order_id||r.orderId||'',platform:plat};
     const a=_skipNorm(r.awb), o=_skipNorm(r.order_id||r.orderId);
-    if(a) byAwb.set(a,info);
-    if(o) byOid.set(o,info);
+    if(a) B.byAwb.set(a,info);
+    if(o) B.byOid.set(o,info);
   };
-  let cloudOk=false;
+  let cloudOk=false, complete=true, scoped=true;
   if(typeof SUPABASE_ENABLED!=='undefined'&&SUPABASE_ENABLED){
-    let sel='awb,order_id,date,reprocessed';
-    for(let off=0,page=0;page<50;page++){
+    complete=false;
+    let sel='awb,order_id,date,platform';
+    for(let off=0,page=0;page<100;page++){
       const qp='select='+sel+'&limit=1000&offset='+off+'&date=gte.'+from+'&date=lt.'+today+'&order=date.desc,awb.asc';
       let rows=await sbReq('GET','cancels',null,qp);
-      if(rows===null&&off===0&&sel.includes('reprocessed')){ sel='awb,order_id,date'; continue; }   // purani table me column na ho
+      if(rows===null) rows=await sbReq('GET','cancels',null,qp);      // 8s timeout/network: ek baar aur try
+      if(rows===null&&off===0&&sel.includes('platform')){ sel='awb,order_id,date'; scoped=false; continue; }   // platform column na ho to sabhi platforms par
       if(rows===null) break;
       cloudOk=true;
-      if(!rows.length) break;
-      rows.forEach(add); off+=rows.length;
-      if(rows.length<1000) break;
+      if(!rows.length){ complete=true; break; }
+      rows.forEach(r=>add(r,scoped?null:'*')); off+=rows.length;
+      if(rows.length<1000){ complete=true; break; }
     }
   }
-  try{ (cancelList||[]).forEach(r=>add({awb:r.awb,order_id:r.orderId,date:r.date,reprocessed:r.reprocessed})); }catch(e){}
-  return {byAwb,byOid,from,today,cloudOk,count:Math.max(byAwb.size,byOid.size)};
+  try{ (cancelList||[]).forEach(r=>add({awb:r.awb,order_id:r.orderId,date:r.date,platform:r.platform})); }catch(e){}
+  return {byPlat,from,today,cloudOk,complete,scoped};
+}
+function _cancelSetsFor(cs,platform){
+  const out=[]; if(!cs) return out;
+  if(cs.byPlat['*']) out.push(cs.byPlat['*']);
+  if(platform==='generic'){ Object.keys(cs.byPlat).forEach(k=>{ if(k!=='*') out.push(cs.byPlat[k]); }); }
+  else if(cs.byPlat[platform]) out.push(cs.byPlat[platform]);
+  return out;
 }
 // processSinglePDF ke end me: skip hone wale orders/pages hata do aur record rakho
 function _applyCancelSkip(orders,sPages,platform){
   const cs=window._cancelSkip; if(!cs) return [];
   if(!_SKIPC_PLATFORMS.includes(platform)) return [];
+  const sets=_cancelSetsFor(cs,platform); if(!sets.length) return [];
   const hit=o=>{
     const a=_skipNorm(o.awb), id=_skipNorm(o.orderId);
-    return (a&&cs.byAwb.get(a))||(id&&cs.byOid.get(id))||null;
+    for(const S of sets){ const h=(a&&S.byAwb.get(a))||(id&&S.byOid.get(id)); if(h) return h; }
+    return null;
   };
   const skipped=[], seen=new Set();
   const take=(o,h)=>{ const k=_skipNorm(o.awb)+'|'+_skipNorm(o.orderId)+'|'+(o.sku||''); if(seen.has(k)) return; seen.add(k);
@@ -8301,7 +8327,7 @@ function _lShowSkipped(noSave){
   if(!list.length){
     if(!cs){ el.style.display='none'; el.innerHTML=''; return; }
     el.style.display='block';
-    el.innerHTML='✅ Kal ke cancel check ho gaya ('+cs.count+' cancel, '+cs.from+' → '+cs.today+') — koi order match nahi hua, sab process hue.';
+    el.innerHTML='✅ Cancel check ho gaya ('+cs.from+' → '+cs.today+' se pehle tak ke cancels) — koi order match nahi hua, sab process hue.';
     return;
   }
   if(!noSave){ try{ localStorage.setItem(_SKIPLIST_LS,JSON.stringify({date:getTodayStr(),list})); }catch(e){} }
@@ -8331,7 +8357,7 @@ function _lSkipRenderRows(){
 // Pichli skip list page reload ke baad bhi dikhe (ticket baad me raise karna ho to)
 try{
   const _sv=JSON.parse(localStorage.getItem(_SKIPLIST_LS)||'null');
-  if(_sv&&Array.isArray(_sv.list)&&_sv.list.length){ window._lSkipped=_sv.list; window._lSkipFromStore=_sv.date||''; }
+  if(_sv&&Array.isArray(_sv.list)&&_sv.list.length){ window._lSkipLast={date:_sv.date||'',list:_sv.list}; }
 }catch(e){}
 async function lProcess(){
   await _ensureLibs('pdfjs','pdflib');
@@ -8373,11 +8399,12 @@ async function lProcess(){
     if(errEl){errEl.textContent='❌ pdf-lib load nahi hua — page reload karo!';errEl.classList.add('show');}
     if(btn)btn.disabled=false;if(upProg)upProg.style.display='none';return;
   }
-  window._cancelSkip=null; window._lSkipped=[]; window._lSkipFromStore=null;
+  window._cancelSkip=null; window._lSkipped=[]; window._lSkipFromStore=null; window._lSkipRun=false;
   try{ await _lDetectQueuePlatforms(); }catch(e){}
   if(lSkipCancelOn() && _lSkipRelevant()){
     setUP(2,'⛔ Kal ke cancel orders check ho rahe hain...','');
-    try{ window._cancelSkip=await _loadCancelSkipSets(); }
+    try{ window._cancelSkip=await _loadCancelSkipSets();
+         if(window._cancelSkip&&!window._cancelSkip.complete) toast('⚠️ Cancel list cloud se poori nahi aayi — jitni mili utne se check hua (internet/Supabase check karo)','#d97706',6000); }
     catch(e){ console.warn('[skipCancel] load fail',e); window._cancelSkip=null; toast('⚠️ Kal ke cancel list load nahi hui — skip check nahi hua','#d97706',4000); }
   }
   const hasCroppedSrc  = !!(window._croppedPdfBytes && window._croppedPdfBytes.length);
@@ -8488,7 +8515,7 @@ async function lProcess(){
     if(d!==0)return d;
     return(a.sku||'').localeCompare(b.sku||'');
   });
-  try{ _lShowSkipped(); if((window._lSkipped||[]).length) toast('⛔ '+window._lSkipped.length+' order skip hue — kal ke cancel se match','#b91c1c',6000); }catch(e){}
+  try{ window._lSkipRun=!!window._cancelSkip; _lShowSkipped(); if((window._lSkipped||[]).length) toast('⛔ '+window._lSkipped.length+' order skip hue — kal ke cancel se match','#b91c1c',6000); }catch(e){}
   setUP(100,'✅ Done! SKU check karo...',
     `📊 Total: ${lOrders.length} orders · ${lSPages.length} pages`);
   if(upProg) upProg.style.display='none'; // turant hide karo
