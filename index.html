@@ -5975,15 +5975,7 @@ async function lSortByProductAndProcess(){
   }
   try{
     setP(5,'🔀 Product name se sort ho raha hai...');
-    lSPages.sort((a,b)=>{
-      const pA=skuLookup(a.sku)||a.sku||'';
-      const pB=skuLookup(b.sku)||b.sku||'';
-      const pCmp=pA.localeCompare(pB);
-      if(pCmp!==0)return pCmp;
-      const dCourier=(CP[a.courier]??99)-(CP[b.courier]??99);
-      if(dCourier!==0)return dCourier;
-      return(a.sku||'').localeCompare(b.sku||'');
-    });
+    lSPages.sort(lPageCmp);
     setP(20,'📄 Master + Courier PDFs ban rahi hain...');
     await _lBuildMain(setP);
     setP(100,'✅ Sab PDFs ready! Download karo 👇');
@@ -7459,6 +7451,30 @@ const CP={
   'FK (Delhivery)':5,
   'Amazon Logistics':6
 };
+// ── Ekart Small: label ke sort-code ka order (product name ke andar B1,B2..B6, ZON, NAT, B10 ...) ──
+const EK_CODE_ORDER=['B1','B2','B3','B4','B5','B6','B7','B8','B9','ZON','NAT','B10','B11','B12','B13','B14','B15','B16','B17','B18','B19'];
+function ekCodeRank(c){ const i=EK_CODE_ORDER.indexOf(String(c||'').toUpperCase()); return i<0?999:i; }
+function detectEkartCode(lines,rawItems){
+  const RE=/^(ZON|NAT|B[1-9]|B1[0-9])$/;
+  if(rawItems&&rawItems.length){
+    for(const it of rawItems){ const t=(it.str||'').trim(); if(RE.test(t)) return t; }
+    for(const it of rawItems){ const t=(it.str||'').trim().toUpperCase(); if(RE.test(t)) return t; }
+  }
+  const m=(lines||[]).join('\n').match(/\b(ZON|NAT|B[1-9]|B1[0-9])\b/i);
+  return m?m[1].toUpperCase():'';
+}
+// Product name -> courier -> (Ekart Small ho to) code B1..ZON..NAT..B10 -> SKU
+function lPageCmp(a,b){
+  const pA=skuLookup(a.sku)||a.sku||'';
+  const pB=skuLookup(b.sku)||b.sku||'';
+  const pCmp=pA.localeCompare(pB);
+  if(pCmp!==0)return pCmp;
+  const dCourier=(CP[a.courier]??99)-(CP[b.courier]??99);
+  if(dCourier!==0)return dCourier;
+  const dCode=ekCodeRank(a.ekCode)-ekCodeRank(b.ekCode);
+  if(dCode!==0)return dCode;
+  return(a.sku||'').localeCompare(b.sku||'');
+}
 let lRaw=null,lOrders=[],lCurrentBatchOrders=[],lSPages=[],lMode='excel',lPT='all',lPlatform='meesho',lOriginalPdfName='';
 document.getElementById('lF').addEventListener('change',e=>{if(e.target.files&&e.target.files.length)bulkFilesAdded(e.target.files);});
 function lLoad(file){if(file&&file.type==='application/pdf')bulkFilesAdded([file]);}
@@ -8063,12 +8079,13 @@ async function processSinglePDF(fileItem, onPageProgress){
     const awb = _awbData.awb||'';
     const orderId = _awbData.orderId||'';
     if(row){
-      const fullRow={...row,awb,orderId,platform};
+      const _ekCode=(row.courier==='FK (S)')?detectEkartCode(lines,window._lastRawItems):'';
+      const fullRow={...row,awb,orderId,platform,ekCode:_ekCode};
       orders.push(fullRow);
       sPages.push({...fullRow,pi:i-1,pdfName});
     } else {
       const _fallbackCourier = platform==='amazon'?'Amazon Logistics':platform==='flipkart'?detectCourier(lines.join('\n'),'flipkart',ct.items):platform==='meesho'?detectCourier(lines.join('\n'),'meesho',ct.items):'Unknown';
-      sPages.push({sku:'',courier:_fallbackCourier,qty:0,awb:'',orderId:'',platform,pi:i-1,pdfName});
+      sPages.push({sku:'',courier:_fallbackCourier,qty:0,awb:'',orderId:'',platform,pi:i-1,pdfName,ekCode:(_fallbackCourier==='FK (S)'?detectEkartCode(lines,window._lastRawItems):'')});
     }
     pg.cleanup();
     lSP(i, total);
@@ -8445,6 +8462,7 @@ async function lProcess(){
             qty: 1,
             courier: p.courier,
             sku: p.sku,
+            ekCode: p.ekCode||'',
             itemSku: p.itemSku||null, itemQty: p.itemQty||1, amzGeom: p.amzGeom||null, amzLowInk: (p.amzLowInk==null?null:p.amzLowInk),
             crop: null              // already baked in if cropped
           };
@@ -8492,7 +8510,7 @@ async function lProcess(){
           if(!isEkartLarge&&!isEkartSmall&&(p.qty||0)===0) return;
           const crop=getAutoCropMargins();
           const hasCrop=crop.t||crop.b||crop.l||crop.r;
-          const info={raw:result.raw,srcDoc,pi:p.pi,qty:1,courier:p.courier,sku:p.sku,itemSku:p.itemSku||null,itemQty:p.itemQty||1,amzGeom:p.amzGeom||null,amzLowInk:(p.amzLowInk==null?null:p.amzLowInk),crop:hasCrop?crop:null};
+          const info={raw:result.raw,srcDoc,pi:p.pi,qty:1,courier:p.courier,sku:p.sku,ekCode:p.ekCode||'',itemSku:p.itemSku||null,itemQty:p.itemQty||1,amzGeom:p.amzGeom||null,amzLowInk:(p.amzLowInk==null?null:p.amzLowInk),crop:hasCrop?crop:null};
           allPagesFlat.push(info);
           const c=p.courier||'Other';
           if(!allPagesByCourier[c])allPagesByCourier[c]=[];
@@ -10076,12 +10094,7 @@ const _DL_LIVE={
   ldD:()=>_adMainPages().filter(p=>p.courier==='Delhivery'),
   ldX:()=>_adMainPages().filter(p=>p.courier==='Xpress Bees'),
   ldAm:()=>_adMainPages().filter(p=>p.courier==='Amazon Logistics'),
-  lAdPdf:()=>_adPages().sort((x,y)=>{
-    const pA=skuLookup(x.sku)||x.sku||'', pB=skuLookup(y.sku)||y.sku||'';
-    const c=pA.localeCompare(pB); if(c!==0) return c;
-    const dc=(CP[x.courier]??99)-(CP[y.courier]??99); if(dc!==0) return dc;
-    return (x.sku||'').localeCompare(y.sku||'');
-  })
+  lAdPdf:()=>_adPages().sort(lPageCmp)
 };
 const _dlBusy={};
 async function _dlBuildAndSave(id){
