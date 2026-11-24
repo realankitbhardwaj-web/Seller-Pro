@@ -8082,7 +8082,7 @@ async function processSinglePDF(fileItem, onPageProgress){
       const _ekCode=(row.courier==='FK (S)')?detectEkartCode(lines,window._lastRawItems):'';
       const fullRow={...row,awb,orderId,platform,ekCode:_ekCode};
       orders.push(fullRow);
-      sPages.push({...fullRow,pi:i-1,pdfName});
+      sPages.push({...fullRow,pi:i-1,pdfName,_ord:fullRow});
     } else {
       const _fallbackCourier = platform==='amazon'?'Amazon Logistics':platform==='flipkart'?detectCourier(lines.join('\n'),'flipkart',ct.items):platform==='meesho'?detectCourier(lines.join('\n'),'meesho',ct.items):'Unknown';
       sPages.push({sku:'',courier:_fallbackCourier,qty:0,awb:'',orderId:'',platform,pi:i-1,pdfName,ekCode:(_fallbackCourier==='FK (S)'?detectEkartCode(lines,window._lastRawItems):'')});
@@ -8464,6 +8464,7 @@ async function lProcess(){
             sku: p.sku,
             ekCode: p.ekCode||'',
             itemSku: p.itemSku||null, itemQty: p.itemQty||1, amzGeom: p.amzGeom||null, amzLowInk: (p.amzLowInk==null?null:p.amzLowInk),
+            dAwb: p.awb||'', dOid: p.orderId||'', dPlat: p.platform||'', dOrd: p._ord||null,
             crop: null              // already baked in if cropped
           };
           allPagesFlat.push(info);
@@ -8510,7 +8511,7 @@ async function lProcess(){
           if(!isEkartLarge&&!isEkartSmall&&(p.qty||0)===0) return;
           const crop=getAutoCropMargins();
           const hasCrop=crop.t||crop.b||crop.l||crop.r;
-          const info={raw:result.raw,srcDoc,pi:p.pi,qty:1,courier:p.courier,sku:p.sku,ekCode:p.ekCode||'',itemSku:p.itemSku||null,itemQty:p.itemQty||1,amzGeom:p.amzGeom||null,amzLowInk:(p.amzLowInk==null?null:p.amzLowInk),crop:hasCrop?crop:null};
+          const info={raw:result.raw,srcDoc,pi:p.pi,qty:1,courier:p.courier,sku:p.sku,ekCode:p.ekCode||'',itemSku:p.itemSku||null,itemQty:p.itemQty||1,amzGeom:p.amzGeom||null,amzLowInk:(p.amzLowInk==null?null:p.amzLowInk),dAwb:p.awb||'',dOid:p.orderId||'',dPlat:p.platform||'',dOrd:p._ord||null,crop:hasCrop?crop:null};
           allPagesFlat.push(info);
           const c=p.courier||'Other';
           if(!allPagesByCourier[c])allPagesByCourier[c]=[];
@@ -8527,6 +8528,41 @@ async function lProcess(){
       renderBulkQueue();
     }
   }
+  // ── DUPLICATE LABEL FIX (sirf is upload ke andar): same AWB ya same Order ID wale 2+ labels me se sirf pehla rakho. Pichle sessions se match nahi hota ──
+  try{
+    const _nA=a=>String(a||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const _keys=(plat,awb,oid)=>{            // sirf AWB aur Order ID unique hote hain
+      const k=[]; const A=_nA(awb), O=_nA(oid);
+      if(A) k.push('A|'+(plat||'')+'|'+A);
+      if(O) k.push('O|'+(plat||'')+'|'+O);
+      return k;
+    };
+    const _seenPg=new Set(); let _dupPg=0; const _dupList=[]; const _dropOrd=new Set();
+    const _keepPg=[];
+    allPagesFlat.forEach(info=>{
+      const ks=_keys(info.dPlat,info.dAwb,info.dOid);
+      if(ks.length && ks.some(k=>_seenPg.has(k))){
+        _dupPg++; if(_dupList.length<8)_dupList.push(info.dAwb||info.dOid||('pg '+((info.pi||0)+1)));
+        if(info.dOrd) _dropOrd.add(info.dOrd);
+        return;
+      }
+      ks.forEach(k=>_seenPg.add(k)); _keepPg.push(info);
+    });
+    if(_dupPg){
+      allPagesFlat.length=0; _keepPg.forEach(i=>allPagesFlat.push(i));
+      const _seenOr=new Set();
+      const _dedupOr=arr=>arr.filter(o=>{
+        if(_dropOrd.has(o)) return false;
+        const ks=_keys(o.platform,o.awb,o.orderId); if(!ks.length) return true;
+        if(ks.some(k=>_seenOr.has(k))) return false; ks.forEach(k=>_seenOr.add(k)); return true;
+      });
+      const _o1=_dedupOr(lOrders.slice()); _seenOr.clear(); const _o2=_dedupOr(lCurrentBatchOrders.slice());
+      lOrders.length=0; _o1.forEach(o=>lOrders.push(o));
+      lCurrentBatchOrders.length=0; _o2.forEach(o=>lCurrentBatchOrders.push(o));
+      lLog('lPLog','🔁 '+_dupPg+' duplicate label hata diye: '+_dupList.join(', ')+(_dupPg>_dupList.length?' …':''));
+      toast('🔁 '+_dupPg+' duplicate label hata diye — sorted PDF me ek label ek hi baar jayega','#d97706',6000);
+    }
+  }catch(e){ console.warn('[dupLabel] dedupe fail',e); }
   lSPages=allPagesFlat.slice();
   lSPages.sort((a,b)=>{
     const d=(CP[a.courier]??99)-(CP[b.courier]??99);
